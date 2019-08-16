@@ -140,6 +140,7 @@ class DepositServiceImpl(
                     "User: ${deposit.userUuid} does not have a wallet")
         }
         return userWallet.wallet.hash
+            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
     }
 
     private fun generateDepositReference(): String = (1..8)

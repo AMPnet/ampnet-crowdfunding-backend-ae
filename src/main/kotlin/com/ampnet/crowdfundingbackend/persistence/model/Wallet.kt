@@ -19,17 +19,23 @@ data class Wallet(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int,
 
-    @Column(nullable = false, length = 66)
-    var hash: String,
+    @Column(nullable = false, length = 128)
+    val activationData: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
-    var type: WalletType,
+    val type: WalletType,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
-    var currency: Currency,
+    val currency: Currency,
 
     @Column(nullable = false)
-    var createdAt: ZonedDateTime
+    val createdAt: ZonedDateTime,
+
+    @Column(length = 128)
+    var hash: String?,
+
+    @Column
+    var activatedAt: ZonedDateTime?
 )

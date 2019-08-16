@@ -239,7 +239,7 @@ class WalletServiceTest : JpaServiceTestBase() {
         suppose("Blockchain service will generate transaction") {
             Mockito.`when`(
                     mockedBlockchainService.generateAddOrganizationTransaction(
-                            testContext.wallet.hash, testContext.organization.name)
+                            getWalletHash(testContext.wallet), testContext.organization.name)
             ).thenReturn(defaultTransactionData)
         }
 

@@ -37,7 +37,9 @@ class ProjectInvestmentServiceImpl(
         val projectWallet = getProjectWallet(request.project)
         verifyProjectDidNotReachExpectedInvestment(projectWallet, request.project.expectedFunding)
 
-        val investRequest = ProjectInvestmentTxRequest(userWallet.hash, projectWallet.hash, request.amount)
+        val userWalletHash = getWalletHash(userWallet)
+        val projectWalletHash = getWalletHash(projectWallet)
+        val investRequest = ProjectInvestmentTxRequest(userWalletHash, projectWalletHash, request.amount)
         val data = blockchainService.generateProjectInvestmentTransaction(investRequest)
         val info = transactionInfoService.createInvestAllowanceTransaction(
                 request.project.name, request.amount, request.investorUuid)
@@ -52,7 +54,9 @@ class ProjectInvestmentServiceImpl(
         val userWallet = getUserWallet(userUuid)
         val projectWallet = getProjectWallet(project)
 
-        val data = blockchainService.generateConfirmInvestment(userWallet.hash, projectWallet.hash)
+        val userWalletHash = getWalletHash(userWallet)
+        val projectWalletHash = getWalletHash(projectWallet)
+        val data = blockchainService.generateConfirmInvestment(userWalletHash, projectWalletHash)
         val info = transactionInfoService.createInvestTransaction(project.name, userUuid)
         return TransactionDataAndInfo(data, info)
     }
@@ -99,4 +103,7 @@ class ProjectInvestmentServiceImpl(
 
     private fun getProjectWallet(project: Project) = project.wallet
         ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "Project does not have the wallet")
+
+    private fun getWalletHash(wallet: Wallet) = wallet.hash
+        ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
 }

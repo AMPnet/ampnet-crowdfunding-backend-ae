@@ -68,7 +68,7 @@ class BroadcastTransactionController(
         val organization = organizationService.findOrganizationById(orgId)
                 ?: throw ResourceNotFoundException(ErrorCode.ORG_MISSING, "Missing organization with id: $orgId")
         val wallet = walletService.createOrganizationWallet(organization, signedTransaction)
-        return wallet.hash
+        return wallet.activationData
     }
 
     private fun createProjectWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {
@@ -77,7 +77,7 @@ class BroadcastTransactionController(
         val project = projectService.getProjectById(projectId)
                 ?: throw ResourceNotFoundException(ErrorCode.PRJ_MISSING, "Missing project with id: $projectId")
         val wallet = walletService.createProjectWallet(project, signedTransaction)
-        return wallet.hash
+        return wallet.activationData
     }
 
     private fun confirmMintTransaction(transactionInfo: TransactionInfo, signedTransaction: String): String {

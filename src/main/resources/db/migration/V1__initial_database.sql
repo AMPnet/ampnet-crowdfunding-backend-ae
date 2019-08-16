@@ -12,7 +12,9 @@ INSERT INTO role VALUES
 -- Wallet
 CREATE TABLE wallet (
     id SERIAL PRIMARY KEY,
-    hash VARCHAR(66) UNIQUE NOT NULL,
+    activation_data VARCHAR(128) UNIQUE NOT NULL,
+    activated_at TIMESTAMP,
+    hash VARCHAR(128) UNIQUE,
     type VARCHAR(8) NOT NULL,
     currency VARCHAR(3) NOT NULL,
     created_at TIMESTAMP NOT NULL

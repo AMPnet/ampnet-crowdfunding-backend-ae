@@ -106,11 +106,7 @@ abstract class JpaServiceTestBase : TestBase() {
     }
 
     protected fun createWallet(hash: String, type: WalletType): Wallet {
-        val wallet = Wallet::class.java.getConstructor().newInstance()
-        wallet.hash = hash
-        wallet.type = type
-        wallet.currency = Currency.EUR
-        wallet.createdAt = ZonedDateTime.now()
+        val wallet = Wallet(0, hash, type, Currency.EUR, ZonedDateTime.now(), hash, ZonedDateTime.now())
         return walletRepository.save(wallet)
     }
 
@@ -158,7 +154,7 @@ abstract class JpaServiceTestBase : TestBase() {
     protected fun getUserWalletHash(userUuid: UUID): String {
         val optionalUserWallet = userWalletRepository.findByUserUuid(userUuid)
         assertThat(optionalUserWallet).isPresent
-        return optionalUserWallet.get().wallet.hash
+        return getWalletHash(optionalUserWallet.get().wallet)
     }
 
     protected fun getWalletHash(wallet: Wallet?): String = wallet?.hash ?: fail("User wallet must not be null")

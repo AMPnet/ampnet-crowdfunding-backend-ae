@@ -129,7 +129,9 @@ class WithdrawServiceImpl(
             throw ResourceNotFoundException(ErrorCode.WALLET_MISSING,
                     "User must have a wallet to make Withdraw request")
         }
-        val balance = blockchainService.getBalance(wallet.wallet.hash)
+        val walletHash = wallet.wallet.hash
+            ?: throw throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
+        val balance = blockchainService.getBalance(walletHash)
         if (amount > balance) {
             throw InvalidRequestException(ErrorCode.WALLET_FUNDS, "Insufficient funds")
         }
@@ -175,5 +177,6 @@ class WithdrawServiceImpl(
                     "User must have a wallet to create Withdraw request")
         }
         return userWallet.wallet.hash
+            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Wallet not activated")
     }
 }

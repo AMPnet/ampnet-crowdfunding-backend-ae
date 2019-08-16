@@ -82,7 +82,9 @@ class OrganizationServiceImpl(
         organization.approved = approve
         organization.updatedAt = ZonedDateTime.now()
         organization.approvedByUserUuid = approvedBy
-        blockchainService.activateOrganization(wallet.hash)
+        val walletHash = organization.wallet?.hash
+            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
+        blockchainService.activateOrganization(walletHash)
         return organization
     }
 

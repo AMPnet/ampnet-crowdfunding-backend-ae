@@ -339,7 +339,7 @@ class WalletControllerTest : ControllerTestBase() {
         suppose("Blockchain service successfully creates organization") {
             testData.transactionData = generateTransactionData(testData.signedTransaction)
             Mockito.`when`(blockchainService.generateAddOrganizationTransaction(
-                    testData.wallet.hash, testData.organization.name)
+                    getWalletHash(testData.wallet), testData.organization.name)
             ).thenReturn(testData.transactionData)
         }
 

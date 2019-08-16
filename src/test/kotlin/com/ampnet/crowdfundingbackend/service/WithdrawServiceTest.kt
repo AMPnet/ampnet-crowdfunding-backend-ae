@@ -70,7 +70,7 @@ class WithdrawServiceTest : JpaServiceTestBase() {
     @Test
     fun mustThrowExceptionIfUserDoesNotHaveEnoughFunds() {
         suppose("User does not have enough funds") {
-            Mockito.`when`(mockedBlockchainService.getBalance(userWallet.hash)).thenReturn(99L)
+            Mockito.`when`(mockedBlockchainService.getBalance(getWalletHash(userWallet))).thenReturn(99L)
         }
 
         verify("Service will throw exception for insufficient funds") {

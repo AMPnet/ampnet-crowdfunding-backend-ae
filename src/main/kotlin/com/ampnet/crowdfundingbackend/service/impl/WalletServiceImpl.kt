@@ -47,7 +47,9 @@ class WalletServiceImpl(
     @Transactional(readOnly = true)
     @Throws(InternalException::class)
     override fun getWalletBalance(wallet: Wallet): Long {
-        return blockchainService.getBalance(wallet.hash)
+        val walletHash = wallet.hash
+            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Wallet not activated")
+        return blockchainService.getBalance(walletHash)
     }
 
     @Transactional(readOnly = true)
@@ -141,7 +143,8 @@ class WalletServiceImpl(
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_HASH_EXISTS,
                     "SAME HASH! Trying to create wallet: $type with existing hash: $hash")
         }
-        val wallet = Wallet(0, hash, type, Currency.EUR, ZonedDateTime.now())
+        // TODO: wallet creation
+        val wallet = Wallet(0, hash, type, Currency.EUR, ZonedDateTime.now(), hash, ZonedDateTime.now())
         return walletRepository.save(wallet)
     }
 
