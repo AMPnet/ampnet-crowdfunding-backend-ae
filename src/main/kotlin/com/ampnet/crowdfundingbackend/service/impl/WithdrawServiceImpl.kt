@@ -14,7 +14,6 @@ import com.ampnet.crowdfundingbackend.service.StorageService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.WithdrawService
 import com.ampnet.crowdfundingbackend.service.pojo.DocumentSaveRequest
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -29,9 +28,6 @@ class WithdrawServiceImpl(
     private val storageService: StorageService,
     private val mailService: MailService
 ) : WithdrawService {
-
-    // TODO: remove after changing blockchain-service
-    private val burnWallet = "0x43b0d9b605e68a0c50dc436757a86c82d97787cc"
 
     @Transactional(readOnly = true)
     override fun getPendingForUser(user: UUID): Withdraw? {
@@ -86,7 +82,7 @@ class WithdrawServiceImpl(
     override fun confirmApproval(signedTransaction: String, withdrawId: Int): Withdraw {
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForApproval(withdraw)
-        val approvalTxHash = blockchainService.postTransaction(signedTransaction, PostTransactionType.APPROVAL_BURN)
+        val approvalTxHash = blockchainService.postTransaction(signedTransaction)
         withdraw.approvedTxHash = approvalTxHash
         withdraw.approvedAt = ZonedDateTime.now()
         return withdrawRepository.save(withdraw)
@@ -97,7 +93,7 @@ class WithdrawServiceImpl(
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForBurn(withdraw)
         val userWallet = getUserWallet(withdraw.userUuid)
-        val data = blockchainService.generateBurnTransaction(burnWallet, userWallet, withdraw.amount)
+        val data = blockchainService.generateBurnTransaction(userWallet)
         val info = transactionInfoService.createBurnTransaction(withdraw.amount, user, withdraw.id)
         withdraw.burnedBy = user
         withdrawRepository.save(withdraw)
@@ -108,7 +104,7 @@ class WithdrawServiceImpl(
     override fun burn(signedTransaction: String, withdrawId: Int): Withdraw {
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForBurn(withdraw)
-        val burnedTxHash = blockchainService.postTransaction(signedTransaction, PostTransactionType.ISSUER_BURN)
+        val burnedTxHash = blockchainService.postTransaction(signedTransaction)
         withdraw.burnedTxHash = burnedTxHash
         withdraw.burnedAt = ZonedDateTime.now()
         withdrawRepository.save(withdraw)

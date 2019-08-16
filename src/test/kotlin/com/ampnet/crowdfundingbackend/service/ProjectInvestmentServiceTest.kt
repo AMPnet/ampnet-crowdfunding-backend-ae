@@ -9,7 +9,6 @@ import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.service.impl.ProjectInvestmentServiceImpl
 import com.ampnet.crowdfundingbackend.service.impl.TransactionInfoServiceImpl
 import com.ampnet.crowdfundingbackend.service.impl.WalletServiceImpl
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import com.ampnet.crowdfundingbackend.service.pojo.ProjectInvestmentRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 import org.assertj.core.api.Assertions.assertThat
@@ -243,7 +242,7 @@ class ProjectInvestmentServiceTest : JpaServiceTestBase() {
     fun mustBeAbleInvestInProject() {
         suppose("Blockchain service will return hash for post transaction") {
             Mockito.`when`(mockedBlockchainService
-                    .postTransaction(testContext.defaultSignedTransaction, PostTransactionType.PRJ_INVEST)
+                    .postTransaction(testContext.defaultSignedTransaction)
             ).thenReturn(testContext.defaultTxHash)
         }
 
@@ -253,73 +252,13 @@ class ProjectInvestmentServiceTest : JpaServiceTestBase() {
         }
     }
 
-    @Test
-    fun mustNotBeAbleToGenerateConfirmInvestmentWithoutUserWallet() {
-        suppose("Project exists") {
-            databaseCleanerService.deleteAllProjects()
-            testContext.project = createProject("test name", organization, userUuid)
-        }
-
-        verify("Service will throw exception that user wallet is missing") {
-            val exception = assertThrows<ResourceNotFoundException> {
-                projectInvestmentService.generateConfirmInvestment(userUuid, testContext.project)
-            }
-            assertThat(exception.errorCode).isEqualTo(ErrorCode.WALLET_MISSING)
-        }
-    }
-
-    @Test
-    fun mustNotBeAbleToGenerateConfirmInvestmentWithoutProjectWallet() {
-        suppose("Project exists") {
-            databaseCleanerService.deleteAllProjects()
-            testContext.project = createProject("test name", organization, userUuid)
-        }
-        suppose("User has a wallet") {
-            createWalletForUser(userUuid, testContext.defaultAddressHash)
-        }
-
-        verify("Service will throw exception that project wallet is missing") {
-            val exception = assertThrows<ResourceNotFoundException> {
-                projectInvestmentService.generateConfirmInvestment(userUuid, testContext.project)
-            }
-            assertThat(exception.errorCode).isEqualTo(ErrorCode.WALLET_MISSING)
-        }
-    }
-
-    @Test
-    fun mustBeAbleGenerateConfirmInvestment() {
-        suppose("Project exists") {
-            databaseCleanerService.deleteAllProjects()
-            testContext.project = createProject("test name", organization, userUuid)
-        }
-        suppose("User has a wallet") {
-            createWalletForUser(userUuid, testContext.defaultAddressHash)
-        }
-        suppose("Project has wallet") {
-            testContext.project.wallet =
-                createWalletForProject(testContext.project, testContext.defaultProjectAddressHash)
-        }
-        suppose("Blockchain service will generate transaction") {
-            val userWalletHash = getUserWalletHash(userUuid)
-            val projectWalletHash = getWalletHash(testContext.project.wallet)
-            Mockito.`when`(
-                    mockedBlockchainService.generateConfirmInvestment(userWalletHash, projectWalletHash)
-            ).thenReturn(testContext.defaultTransactionData)
-        }
-
-        verify("Service will generate confirm transaction") {
-            val transactionData = projectInvestmentService.generateConfirmInvestment(userUuid, testContext.project)
-            assertThat(transactionData.transactionData).isEqualTo(testContext.defaultTransactionData)
-        }
-    }
-
     private class TestContext {
         lateinit var project: Project
         lateinit var investmentRequest: ProjectInvestmentRequest
         val defaultAddressHash = "0x4e4ee58ff3a9e9e78c2dfdbac0d1518e4e1039f9189267e1dc8d3e35cbdf7892"
         val defaultProjectAddressHash = "0x1e4ee58ff3a9e9e78c2dfdbac32133e4e1039f9189267e1dc8d3e35cbdf7111"
         val defaultSignedTransaction = "SignedTransactionRequest"
-        val defaultTransactionData = TransactionData("data", "to", 1, 1, 1, 1, "public_key")
+        val defaultTransactionData = TransactionData("data")
         val defaultTxHash = "0x5432jlhkljkhsf78y7y23rekljhjksadhf6t4632ilhasdfh7836242hluafhds"
     }
 }

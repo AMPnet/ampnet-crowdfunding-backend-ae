@@ -13,7 +13,6 @@ interface OrganizationService {
     fun getAllOrganizations(): List<Organization>
     fun findOrganizationById(id: Int): Organization?
     fun findOrganizationByIdWithWallet(id: Int): Organization?
-    fun approveOrganization(organizationId: Int, approve: Boolean, approvedBy: UUID): Organization
     fun findAllOrganizationsForUser(userUuid: UUID): List<Organization>
 
     fun getOrganizationMemberships(organizationId: Int): List<OrganizationMembership>

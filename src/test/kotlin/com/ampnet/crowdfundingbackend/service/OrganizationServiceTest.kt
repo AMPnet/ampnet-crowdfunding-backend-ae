@@ -23,8 +23,7 @@ class OrganizationServiceTest : JpaServiceTestBase() {
 
     private val organizationService: OrganizationService by lazy {
         val storageServiceImpl = StorageServiceImpl(documentRepository, cloudStorageService)
-        OrganizationServiceImpl(organizationRepository, membershipRepository,
-                roleRepository, mockedBlockchainService, storageServiceImpl)
+        OrganizationServiceImpl(organizationRepository, membershipRepository, roleRepository, storageServiceImpl)
     }
     private lateinit var organization: Organization
 
@@ -78,26 +77,6 @@ class OrganizationServiceTest : JpaServiceTestBase() {
             assertThrows<ResourceAlreadyExistsException> {
                 organizationService.addUserToOrganization(userUuid, organization.id, OrganizationRoleType.ORG_ADMIN)
             }
-        }
-    }
-
-    @Test
-    fun mustThrowExceptionForApprovingNonExistingOrganization() {
-        verify("Service will throw an exception if organization is missing") {
-            val exception = assertThrows<ResourceNotFoundException> {
-                organizationService.approveOrganization(0, true, userUuid)
-            }
-            assertThat(exception.errorCode).isEqualTo(ErrorCode.ORG_MISSING)
-        }
-    }
-
-    @Test
-    fun mustThrowExceptionForApprovingOrganizationWithoutWallet() {
-        verify("Service will throw an excpetion if organization is missing a wallet") {
-            val exception = assertThrows<ResourceNotFoundException> {
-                organizationService.approveOrganization(organization.id, true, userUuid)
-            }
-            assertThat(exception.errorCode).isEqualTo(ErrorCode.WALLET_MISSING)
         }
     }
 

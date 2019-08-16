@@ -11,7 +11,6 @@ import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.persistence.model.Wallet
 import com.ampnet.crowdfundingbackend.service.impl.TransactionInfoServiceImpl
 import com.ampnet.crowdfundingbackend.service.impl.WalletServiceImpl
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 import com.ampnet.crowdfundingbackend.persistence.model.PairWalletCode
 import org.assertj.core.api.Assertions.assertThat
@@ -35,7 +34,7 @@ class WalletServiceTest : JpaServiceTestBase() {
     private val defaultAddressHash = "0x4e4ee58ff3a9e9e78c2dfdbac0d1518e4e1039f9189267e1dc8d3e35cbdf7892"
     private val defaultPublicKey = "0xC2D7CF95645D33006175B78989035C7c9061d3F9"
     private val defaultSignedTransaction = "SignedTransaction"
-    private val defaultTransactionData = TransactionData("data", "to", 1, 1, 1, 1, "public_key")
+    private val defaultTransactionData = TransactionData("data")
 
     @BeforeEach
     fun init() {
@@ -60,8 +59,9 @@ class WalletServiceTest : JpaServiceTestBase() {
     @Test
     fun mustBeAbleToCreateWalletForUser() {
         suppose("Blockchain service successfully adds wallet") {
-            Mockito.`when`(mockedBlockchainService.addWallet(defaultAddress, defaultPublicKey))
-                    .thenReturn(defaultAddressHash)
+            Mockito.`when`(
+                mockedBlockchainService.addWallet(defaultPublicKey)
+            ).thenReturn(TransactionData(defaultAddressHash))
         }
         suppose("Wallet has pair wallet code") {
             databaseCleanerService.deleteAllPairWalletCodes()
@@ -95,7 +95,7 @@ class WalletServiceTest : JpaServiceTestBase() {
         }
         suppose("Blockchain service successfully adds wallet") {
             Mockito.`when`(
-                mockedBlockchainService.postTransaction(defaultSignedTransaction, PostTransactionType.PRJ_CREATE)
+                mockedBlockchainService.postTransaction(defaultSignedTransaction)
             ).thenReturn(defaultAddressHash)
         }
 
@@ -238,8 +238,7 @@ class WalletServiceTest : JpaServiceTestBase() {
         }
         suppose("Blockchain service will generate transaction") {
             Mockito.`when`(
-                    mockedBlockchainService.generateAddOrganizationTransaction(
-                            getWalletHash(testContext.wallet), testContext.organization.name)
+                mockedBlockchainService.generateCreateOrganizationTransaction(getWalletHash(testContext.wallet))
             ).thenReturn(defaultTransactionData)
         }
 
@@ -257,7 +256,7 @@ class WalletServiceTest : JpaServiceTestBase() {
         }
         suppose("Blockchain service successfully adds wallet") {
             Mockito.`when`(
-                mockedBlockchainService.postTransaction(defaultSignedTransaction, PostTransactionType.ORG_CREATE)
+                mockedBlockchainService.postTransaction(defaultSignedTransaction)
             ).thenReturn(defaultAddressHash)
         }
 
@@ -304,7 +303,7 @@ class WalletServiceTest : JpaServiceTestBase() {
         }
         suppose("Blockchain service will return same hash for new project wallet transaction") {
             Mockito.`when`(
-                mockedBlockchainService.postTransaction(defaultSignedTransaction, PostTransactionType.PRJ_CREATE)
+                mockedBlockchainService.postTransaction(defaultSignedTransaction)
             ).thenReturn(defaultAddressHash)
         }
 

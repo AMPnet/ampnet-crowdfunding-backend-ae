@@ -300,8 +300,8 @@ class WithdrawControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service will return approve burn transaction") {
             testContext.transactionData = generateTransactionData("approve-burn-transaction")
-            Mockito.`when`(blockchainService.generateBurnTransaction(
-                    "0x43b0d9b605e68a0c50dc436757a86c82d97787cc", testContext.walletHash, testContext.amount)
+            Mockito.`when`(
+                blockchainService.generateBurnTransaction(testContext.walletHash)
             ).thenReturn(testContext.transactionData)
         }
 

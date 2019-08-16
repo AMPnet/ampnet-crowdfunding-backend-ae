@@ -29,6 +29,10 @@ enum class PrivilegeType {
     PRO_ORG_INVITE,
     PWO_ORG_INVITE,
 
+    // Wallet
+    PRA_WALLET,
+    PWA_WALLET,
+
     // Withdraw
     PRA_WITHDRAW,
     PWA_WITHDRAW,

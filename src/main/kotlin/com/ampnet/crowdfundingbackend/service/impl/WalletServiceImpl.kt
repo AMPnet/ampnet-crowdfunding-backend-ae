@@ -19,7 +19,6 @@ import com.ampnet.crowdfundingbackend.persistence.repository.WalletRepository
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.WalletService
 import com.ampnet.crowdfundingbackend.blockchain.pojo.GenerateProjectWalletRequest
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
 import com.ampnet.crowdfundingbackend.persistence.model.PairWalletCode
 import com.ampnet.crowdfundingbackend.persistence.repository.PairWalletCodeRepository
@@ -44,6 +43,22 @@ class WalletServiceImpl(
 
     private val charPool: List<Char> = ('A'..'Z') + ('0'..'9')
 
+    @Transactional
+    override fun generateWalletActivationTransaction(walletId: Int, userUuid: UUID): TransactionDataAndInfo {
+        val wallet = getWalletById(walletId)
+        val data = blockchainService.addWallet(wallet.activationData)
+        val info = transactionInfoService.activateWalletTransaction(wallet.id, wallet.type, userUuid)
+        return TransactionDataAndInfo(data, info)
+    }
+
+    @Transactional
+    override fun activateWallet(walletId: Int, signedTransaction: String): Wallet {
+        val wallet = getWalletById(walletId)
+        wallet.hash = blockchainService.postTransaction(signedTransaction)
+        wallet.activatedAt = ZonedDateTime.now()
+        return walletRepository.save(wallet)
+    }
+
     @Transactional(readOnly = true)
     @Throws(InternalException::class)
     override fun getWalletBalance(wallet: Wallet): Long {
@@ -67,8 +82,7 @@ class WalletServiceImpl(
             pairWalletCodeRepository.delete(it)
         }
 
-        val txHash = blockchainService.addWallet(request.address, request.publicKey)
-        val wallet = createWallet(txHash, WalletType.USER)
+        val wallet = createWallet(request.publicKey, WalletType.USER)
         val userWallet = UserWallet(0, userUuid, wallet)
         userWalletRepository.save(userWallet)
         return wallet
@@ -92,7 +106,7 @@ class WalletServiceImpl(
     @Throws(ResourceAlreadyExistsException::class)
     override fun createProjectWallet(project: Project, signedTransaction: String): Wallet {
         throwExceptionIfProjectHasWallet(project)
-        val txHash = blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_CREATE)
+        val txHash = blockchainService.postTransaction(signedTransaction)
         val wallet = createWallet(txHash, WalletType.PROJECT)
         project.wallet = wallet
         projectRepository.save(project)
@@ -108,7 +122,7 @@ class WalletServiceImpl(
         val walletHash = getUserWallet(userUuid)?.hash
                 ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "User wallet is missing")
 
-        val data = blockchainService.generateAddOrganizationTransaction(walletHash, organization.name)
+        val data = blockchainService.generateCreateOrganizationTransaction(walletHash)
         val info = transactionInfoService.createOrgTransaction(organization, userUuid)
         return TransactionDataAndInfo(data, info)
     }
@@ -116,7 +130,7 @@ class WalletServiceImpl(
     @Transactional
     override fun createOrganizationWallet(organization: Organization, signedTransaction: String): Wallet {
         throwExceptionIfOrganizationAlreadyHasWallet(organization)
-        val txHash = blockchainService.postTransaction(signedTransaction, PostTransactionType.ORG_CREATE)
+        val txHash = blockchainService.postTransaction(signedTransaction)
         val wallet = createWallet(txHash, WalletType.ORG)
         organization.wallet = wallet
         organizationRepository.save(organization)
@@ -138,13 +152,12 @@ class WalletServiceImpl(
         return ServiceUtils.wrapOptional(pairWalletCodeRepository.findByCode(code))
     }
 
-    private fun createWallet(hash: String, type: WalletType): Wallet {
-        if (walletRepository.findByHash(hash).isPresent) {
+    private fun createWallet(activationData: String, type: WalletType): Wallet {
+        if (walletRepository.findByHash(activationData).isPresent) {
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_HASH_EXISTS,
-                    "SAME HASH! Trying to create wallet: $type with existing hash: $hash")
+                    "Trying to create wallet: $type with existing activationData: $activationData")
         }
-        // TODO: wallet creation
-        val wallet = Wallet(0, hash, type, Currency.EUR, ZonedDateTime.now(), hash, ZonedDateTime.now())
+        val wallet = Wallet(0, activationData, type, Currency.EUR, ZonedDateTime.now(), null, null)
         return walletRepository.save(wallet)
     }
 
@@ -160,6 +173,10 @@ class WalletServiceImpl(
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_EXISTS,
                     "Organization: ${organization.name} already has a wallet.")
         }
+    }
+
+    private fun getWalletById(walletId: Int): Wallet = walletRepository.findById(walletId).orElseThrow {
+        throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "Missing wallet id: $walletId")
     }
 
     private fun generatePairWalletCode(): String = (1..6)

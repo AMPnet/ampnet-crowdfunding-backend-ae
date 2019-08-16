@@ -279,7 +279,7 @@ abstract class ControllerTestBase : TestBase() {
     }
 
     protected fun generateTransactionData(data: String): TransactionData {
-        return TransactionData(data, "to", 1, 1, 1, 1, "public_key")
+        return TransactionData(data)
     }
 
     protected fun createApprovedDeposit(

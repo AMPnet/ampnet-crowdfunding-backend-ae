@@ -9,8 +9,8 @@ import com.ampnet.crowdfundingbackend.persistence.model.Deposit
 import com.ampnet.crowdfundingbackend.persistence.model.Organization
 import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.persistence.model.TransactionInfo
+import com.ampnet.crowdfundingbackend.persistence.model.Wallet
 import com.ampnet.crowdfundingbackend.persistence.model.Withdraw
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -57,13 +57,50 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
     }
 
     @Test
+    fun mustBeAbleToActivateWallet() {
+        suppose("TransactionInfo exists for activation wallet") {
+            testContext.wallet = createUnactivatedWallet(userUuid)
+            testContext.transactionInfo =
+                createTransactionInfo(TransactionType.WALLET_ACTIVATE, userUuid, testContext.wallet.id)
+        }
+        suppose("Blockchain service successfully generates transaction to create organization wallet") {
+            Mockito.`when`(
+                blockchainService.postTransaction(signedTransaction)
+            ).thenReturn(txHash)
+        }
+
+        verify("User can create organization wallet") {
+            val result = mockMvc.perform(
+                post(broadcastPath)
+                    .param(txSignedParam, signedTransaction)
+                    .param(txIdParam, testContext.transactionInfo.id.toString()))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val txHashResponse: TxHashResponse = objectMapper.readValue(result.response.contentAsString)
+            assertThat(txHashResponse.txHash).isEqualTo(txHash)
+        }
+        verify("Wallet is activated") {
+            val optionalWallet = walletRepository.findById(testContext.wallet.id)
+            assertThat(optionalWallet).isPresent
+            val wallet = optionalWallet.get()
+            assertThat(wallet.hash).isEqualTo(txHash)
+            assertThat(wallet.activatedAt).isBeforeOrEqualTo(ZonedDateTime.now())
+        }
+        verify("TransactionInfo is deleted") {
+            val transactionInfo = transactionInfoRepository.findById(testContext.transactionInfo.id)
+            assertThat(transactionInfo).isNotPresent
+        }
+    }
+
+    @Test
     fun mustBeAbleToCreateOrganizationWallet() {
         suppose("TransactionInfo exists for create organization wallet") {
             testContext.transactionInfo = createTransactionInfo(TransactionType.CREATE_ORG, userUuid, organization.id)
         }
         suppose("Blockchain service successfully generates transaction to create organization wallet") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.ORG_CREATE)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -140,7 +177,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service successfully adds project wallet") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_CREATE)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -212,11 +249,11 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
             testContext.project = createProject("Test project", organization, userUuid)
         }
         suppose("TransactionInfo exists for invest allowance transaction") {
-            testContext.transactionInfo = createTransactionInfo(TransactionType.INVEST_ALLOWANCE, userUuid)
+            testContext.transactionInfo = createTransactionInfo(TransactionType.INVEST, userUuid)
         }
         suppose("Blockchain service will accept signed transaction for project investment") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_INVEST)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -248,7 +285,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service will accept signed transaction for project investment confirmation") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_INVEST_CONFIRM)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -279,7 +316,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service will accept signed transaction for project investment confirmation") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.ISSUER_MINT)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -315,7 +352,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service will accept signed transaction for burn approval") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.APPROVAL_BURN)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -346,7 +383,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service will accept signed transaction for issuer burn") {
             Mockito.`when`(
-                    blockchainService.postTransaction(signedTransaction, PostTransactionType.ISSUER_BURN)
+                    blockchainService.postTransaction(signedTransaction)
             ).thenReturn(txHash)
         }
 
@@ -380,10 +417,16 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         return transactionInfoRepository.save(transactionInfo)
     }
 
+    private fun createUnactivatedWallet(userUuid: UUID): Wallet {
+        val wallet = Wallet(0, "activation-data", WalletType.USER, Currency.EUR, ZonedDateTime.now(), null, null)
+        return walletRepository.save(wallet)
+    }
+
     private class TestContext {
         lateinit var transactionInfo: TransactionInfo
         lateinit var project: Project
         lateinit var deposit: Deposit
         lateinit var withdraw: Withdraw
+        lateinit var wallet: Wallet
     }
 }

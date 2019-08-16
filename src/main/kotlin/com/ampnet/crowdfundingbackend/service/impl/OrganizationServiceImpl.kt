@@ -1,6 +1,5 @@
 package com.ampnet.crowdfundingbackend.service.impl
 
-import com.ampnet.crowdfundingbackend.blockchain.BlockchainService
 import com.ampnet.crowdfundingbackend.enums.OrganizationRoleType
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
 import com.ampnet.crowdfundingbackend.exception.ResourceAlreadyExistsException
@@ -27,7 +26,6 @@ class OrganizationServiceImpl(
     private val organizationRepository: OrganizationRepository,
     private val membershipRepository: OrganizationMembershipRepository,
     private val roleRepository: RoleRepository,
-    private val blockchainService: BlockchainService,
     private val storageService: StorageService
 ) : OrganizationService {
 
@@ -70,21 +68,6 @@ class OrganizationServiceImpl(
     override fun findOrganizationByIdWithWallet(id: Int): Organization? {
         val organization = ServiceUtils.wrapOptional(organizationRepository.findById(id))
         organization?.wallet
-        return organization
-    }
-
-    @Transactional
-    override fun approveOrganization(organizationId: Int, approve: Boolean, approvedBy: UUID): Organization {
-        val organization = getOrganization(organizationId)
-        val wallet = organization.wallet ?: throw ResourceNotFoundException(
-                ErrorCode.WALLET_MISSING, "Organization need to have wallet before it can be approved"
-        )
-        organization.approved = approve
-        organization.updatedAt = ZonedDateTime.now()
-        organization.approvedByUserUuid = approvedBy
-        val walletHash = organization.wallet?.hash
-            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
-        blockchainService.activateOrganization(walletHash)
         return organization
     }
 

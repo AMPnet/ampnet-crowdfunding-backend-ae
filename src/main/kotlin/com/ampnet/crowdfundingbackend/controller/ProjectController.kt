@@ -199,18 +199,6 @@ class ProjectController(
         return ResponseEntity.ok(TransactionResponse(transaction))
     }
 
-    @GetMapping("/project/{projectId}/invest/confirm")
-    fun generateConfirmInvestTransaction(
-        @PathVariable("projectId") projectId: Int
-    ): ResponseEntity<TransactionResponse> {
-        logger.debug { "Received request to generate confirm invest transaction for project: $projectId" }
-        val userPrincipal = ControllerUtils.getUserPrincipalFromSecurityContext()
-        val project = getProjectById(projectId)
-
-        val transaction = projectInvestmentService.generateConfirmInvestment(userPrincipal.uuid, project)
-        return ResponseEntity.ok(TransactionResponse(transaction))
-    }
-
     private fun getImageNameFromMultipartFile(multipartFile: MultipartFile): String =
             multipartFile.originalFilename ?: multipartFile.name
 

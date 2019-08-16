@@ -15,7 +15,6 @@ import com.ampnet.crowdfundingbackend.service.StorageService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.pojo.ApproveDepositRequest
 import com.ampnet.crowdfundingbackend.service.pojo.MintServiceRequest
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -32,8 +31,6 @@ class DepositServiceImpl(
 ) : DepositService {
 
     private val charPool: List<Char> = ('A'..'Z') + ('0'..'9')
-    // TODO: remove after changing blockchain-service
-    private val mintAccount = "0x43b0d9b605e68a0c50dc436757a86c82d97787cc"
 
     @Transactional
     override fun create(user: UUID, amount: Long): Deposit {
@@ -101,7 +98,7 @@ class DepositServiceImpl(
         validateDepositForMintTransaction(deposit)
         val amount = deposit.amount
         val receivingWallet = getUserWalletHash(deposit)
-        val data = blockchainService.generateMintTransaction(mintAccount, receivingWallet, amount)
+        val data = blockchainService.generateMintTransaction(receivingWallet, amount)
         val info = transactionInfoService.createMintTransaction(request, receivingWallet)
         return TransactionDataAndInfo(data, info)
     }
@@ -110,7 +107,7 @@ class DepositServiceImpl(
     override fun confirmMintTransaction(signedTransaction: String, depositId: Int): Deposit {
         val deposit = getDepositForId(depositId)
         validateDepositForMintTransaction(deposit)
-        val txHash = blockchainService.postTransaction(signedTransaction, PostTransactionType.ISSUER_MINT)
+        val txHash = blockchainService.postTransaction(signedTransaction)
         deposit.txHash = txHash
         depositRepository.save(deposit)
         mailService.sendDepositInfo(deposit.userUuid, true)

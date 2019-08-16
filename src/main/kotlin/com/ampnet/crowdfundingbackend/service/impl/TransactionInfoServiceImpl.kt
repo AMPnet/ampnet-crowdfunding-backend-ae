@@ -1,6 +1,7 @@
 package com.ampnet.crowdfundingbackend.service.impl
 
 import com.ampnet.crowdfundingbackend.enums.TransactionType
+import com.ampnet.crowdfundingbackend.enums.WalletType
 import com.ampnet.crowdfundingbackend.persistence.model.Organization
 import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.persistence.model.TransactionInfo
@@ -17,21 +18,28 @@ class TransactionInfoServiceImpl(
     private val transactionInfoRepository: TransactionInfoRepository
 ) : TransactionInfoService {
 
+    private val activateWallet = "Wallet Activation"
+    private val activateWalletDescription = "You are signing transaction to activate wallet type: %s"
     private val createOrgTitle = "Create Organization"
     private val createOrgDescription = "You are signing transaction to create organization: %s"
     private val createProjectTitle = "Create Project"
     private val createProjectDescription = "You are signing transaction to create project: %s"
-    private val investAllowanceTitle = "Invest Allowance"
-    private val investAllowanceDescription = "You are signing transaction to allow investment to project: " +
-            "%s with amount %.2f"
     private val investTitle = "Invest"
-    private val investDescription = "You are signing transaction to confirm investment to project: %s"
+    private val investDescription = "You are signing transaction to investment to project: %s with amount %d"
     private val mintTitle = "Mint"
     private val mintDescription = "You are singing mint transaction for wallet: %s"
     private val approvalTitle = "Approval"
     private val approvalDescription = "You are singing approval transaction to burn amount: %d"
     private val burnTitle = "Approval"
     private val burnDescription = "You are singing burn transaction for amount: %d"
+
+    @Transactional
+    override fun activateWalletTransaction(walletId: Int, type: WalletType, userUuid: UUID): TransactionInfo {
+        val description = activateWalletDescription.format(type.name)
+        val request = CreateTransactionRequest(
+            TransactionType.WALLET_ACTIVATE, activateWallet, description, userUuid, walletId)
+        return createTransaction(request)
+    }
 
     @Transactional
     override fun createOrgTransaction(organization: Organization, userUuid: UUID): TransactionInfo {
@@ -50,20 +58,8 @@ class TransactionInfoServiceImpl(
     }
 
     @Transactional
-    override fun createInvestAllowanceTransaction(
-        projectName: String,
-        amount: Long,
-        userUuid: UUID
-    ): TransactionInfo {
-        val description = investAllowanceDescription.format(projectName, amount.toDouble().div(100))
-        val request = CreateTransactionRequest(
-                TransactionType.INVEST_ALLOWANCE, investAllowanceTitle, description, userUuid)
-        return createTransaction(request)
-    }
-
-    @Transactional
-    override fun createInvestTransaction(projectName: String, userUuid: UUID): TransactionInfo {
-        val description = investDescription.format(projectName)
+    override fun createInvestTransaction(projectName: String, amount: Long, userUuid: UUID): TransactionInfo {
+        val description = investDescription.format(projectName, amount.toDouble().div(100))
         val request = CreateTransactionRequest(
                 TransactionType.INVEST, investTitle, description, userUuid)
         return createTransaction(request)

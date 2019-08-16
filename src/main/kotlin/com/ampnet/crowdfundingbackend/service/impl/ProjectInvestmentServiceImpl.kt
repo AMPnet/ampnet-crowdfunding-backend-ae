@@ -10,7 +10,6 @@ import com.ampnet.crowdfundingbackend.persistence.model.Wallet
 import com.ampnet.crowdfundingbackend.service.ProjectInvestmentService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.WalletService
-import com.ampnet.crowdfundingbackend.service.pojo.PostTransactionType
 import com.ampnet.crowdfundingbackend.service.pojo.ProjectInvestmentRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
 import org.springframework.stereotype.Service
@@ -41,28 +40,13 @@ class ProjectInvestmentServiceImpl(
         val projectWalletHash = getWalletHash(projectWallet)
         val investRequest = ProjectInvestmentTxRequest(userWalletHash, projectWalletHash, request.amount)
         val data = blockchainService.generateProjectInvestmentTransaction(investRequest)
-        val info = transactionInfoService.createInvestAllowanceTransaction(
+        val info = transactionInfoService.createInvestTransaction(
                 request.project.name, request.amount, request.investorUuid)
         return TransactionDataAndInfo(data, info)
     }
 
     override fun investInProject(signedTransaction: String): String =
-            blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_INVEST)
-
-    @Transactional
-    override fun generateConfirmInvestment(userUuid: UUID, project: Project): TransactionDataAndInfo {
-        val userWallet = getUserWallet(userUuid)
-        val projectWallet = getProjectWallet(project)
-
-        val userWalletHash = getWalletHash(userWallet)
-        val projectWalletHash = getWalletHash(projectWallet)
-        val data = blockchainService.generateConfirmInvestment(userWalletHash, projectWalletHash)
-        val info = transactionInfoService.createInvestTransaction(project.name, userUuid)
-        return TransactionDataAndInfo(data, info)
-    }
-
-    override fun confirmInvestment(signedTransaction: String): String =
-            blockchainService.postTransaction(signedTransaction, PostTransactionType.PRJ_INVEST_CONFIRM)
+        blockchainService.postTransaction(signedTransaction)
 
     private fun verifyProjectIsStillActive(project: Project) {
         if (project.active.not()) {

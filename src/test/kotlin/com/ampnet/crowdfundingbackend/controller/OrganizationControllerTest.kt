@@ -150,60 +150,6 @@ class OrganizationControllerTest : ControllerTestBase() {
     }
 
     @Test
-    @WithMockCrowdfoundUser(privileges = [PrivilegeType.PWA_ORG_APPROVE])
-    fun mustBeAbleToApproveOrganization() {
-        suppose("Organization exists") {
-            databaseCleanerService.deleteAllOrganizations()
-            testContext.organization = createOrganization("Approve organization", userUuid)
-        }
-        suppose("Organization has a wallet") {
-            databaseCleanerService.deleteAllWallets()
-            createWalletForOrganization(testContext.organization, testContext.walletHash)
-        }
-        suppose("Blockchain service will successfully approve organization") {
-            Mockito.`when`(
-                    blockchainService.activateOrganization(getWalletHash(testContext.organization.wallet))
-            ).thenReturn("return")
-        }
-
-        verify("Admin can approve organization") {
-            val result = mockMvc.perform(
-                    post("$organizationPath/${testContext.organization.id}/approve")
-                            .contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(status().isOk)
-                    .andReturn()
-
-            val organizationWithDocumentResponse: OrganizationWithDocumentResponse =
-                    objectMapper.readValue(result.response.contentAsString)
-            assertThat(organizationWithDocumentResponse.approved).isTrue()
-        }
-        verify("Organization is approved") {
-            val organization = organizationService.findOrganizationById(testContext.organization.id)
-                    ?: fail("Organization must no be null")
-            assertThat(organization.approved).isTrue()
-            assertThat(organization.updatedAt).isBeforeOrEqualTo(ZonedDateTime.now())
-            val userApprovedBy = organization.approvedByUserUuid ?: fail("Approved UserUUID must not be null")
-            assertThat(userApprovedBy).isEqualTo(userUuid)
-        }
-    }
-
-    @Test
-    @WithMockCrowdfoundUser
-    fun mustNotBeAbleApproveOrganizationWithoutPrivilege() {
-        suppose("Organization exists") {
-            databaseCleanerService.deleteAllOrganizations()
-            testContext.organization = createOrganization("Approve organization", userUuid)
-        }
-
-        verify("User without privilege cannot approve organization") {
-            mockMvc.perform(
-                    post("$organizationPath/${testContext.organization.id}/approve")
-                            .contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(status().isForbidden)
-        }
-    }
-
-    @Test
     @WithMockCrowdfoundUser
     fun mustReturnNotFoundForNonExistingOrganization() {
         verify("Response not found for non existing organization") {

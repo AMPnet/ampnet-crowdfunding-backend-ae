@@ -147,8 +147,9 @@ class WalletControllerTest : ControllerTestBase() {
     @WithMockCrowdfoundUser
     fun mustBeAbleToCreateWallet() {
         suppose("Blockchain service successfully adds wallet") {
-            Mockito.`when`(blockchainService.addWallet(testData.address, testData.publicKey))
-                    .thenReturn(testData.hash)
+            Mockito.`when`(
+                blockchainService.addWallet(testData.publicKey)
+            ).thenReturn(TransactionData(testData.hash))
         }
 
         verify("User can create a wallet") {
@@ -338,8 +339,8 @@ class WalletControllerTest : ControllerTestBase() {
         }
         suppose("Blockchain service successfully creates organization") {
             testData.transactionData = generateTransactionData(testData.signedTransaction)
-            Mockito.`when`(blockchainService.generateAddOrganizationTransaction(
-                    getWalletHash(testData.wallet), testData.organization.name)
+            Mockito.`when`(
+                blockchainService.generateCreateOrganizationTransaction(getWalletHash(testData.wallet))
             ).thenReturn(testData.transactionData)
         }
 

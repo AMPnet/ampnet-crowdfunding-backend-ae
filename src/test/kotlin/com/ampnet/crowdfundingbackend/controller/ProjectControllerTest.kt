@@ -504,54 +504,7 @@ class ProjectControllerTest : ControllerTestBase() {
             val transactionResponse: TransactionResponse = objectMapper.readValue(result.response.contentAsString)
             assertThat(transactionResponse.tx).isEqualTo(testContext.transactionData)
             assertThat(transactionResponse.txId).isNotNull()
-            assertThat(transactionResponse.info.txType).isEqualTo(TransactionType.INVEST_ALLOWANCE)
-        }
-    }
-
-    @Test
-    @WithMockCrowdfoundUser
-    fun mustBeAbleToGenerateConfirmInvestmentTransaction() {
-        suppose("Project exists") {
-            testContext.project = createProject("Project", organization, userUuid)
-        }
-        suppose("Project has empty wallet") {
-            createWalletForProject(testContext.project, testContext.walletHash)
-        }
-        suppose("User has wallet") {
-            createWalletForUser(userUuid, testContext.userWalletHash)
-        }
-        suppose("Blockchain service will generate transaction") {
-            Mockito.`when`(blockchainService.generateConfirmInvestment(
-                testContext.userWalletHash, testContext.walletHash)
-            ).thenReturn(testContext.transactionData)
-        }
-
-        verify("User can generate invest project transaction") {
-            val result = mockMvc.perform(
-                get("$projectPath/${testContext.project.id}/invest/confirm"))
-                .andExpect(status().isOk)
-                .andReturn()
-
-            val transactionResponse: TransactionResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(transactionResponse.tx).isEqualTo(testContext.transactionData)
-            assertThat(transactionResponse.txId).isNotNull()
             assertThat(transactionResponse.info.txType).isEqualTo(TransactionType.INVEST)
-        }
-    }
-
-    @Test
-    @WithMockCrowdfoundUser
-    fun mustNotBeAbleToGenerateConfirmInvestmentTransactionForMissingProject() {
-        suppose("User has wallet") {
-            createWalletForUser(userUuid, testContext.userWalletHash)
-        }
-
-        verify("User can generate invest project transaction") {
-            val result = mockMvc.perform(
-                get("$projectPath/0/invest/confirm"))
-                .andExpect(status().isBadRequest)
-                .andReturn()
-            verifyResponseErrorCode(result, ErrorCode.PRJ_MISSING)
         }
     }
 
@@ -624,6 +577,6 @@ class ProjectControllerTest : ControllerTestBase() {
         var projectId: Int = -1
         val walletHash = "0x14bC6a8219c798394726f8e86E040A878da1d99D"
         val userWalletHash = "0x29bC6a8219c798394726f8e86E040A878da1daAA"
-        val transactionData = TransactionData("data", "to", 22, 33, 44, 1000, "pubg")
+        val transactionData = TransactionData("data")
     }
 }

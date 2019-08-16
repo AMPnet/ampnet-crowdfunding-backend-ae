@@ -46,10 +46,10 @@ class BroadcastTransactionController(
         logger.info { "Broadcasting transaction: $transactionInfo" }
 
         val txHash = when (transactionInfo.type) {
+            TransactionType.WALLET_ACTIVATE -> activateWallet(transactionInfo, signedTransaction)
             TransactionType.CREATE_ORG -> createOrganizationWallet(transactionInfo, signedTransaction)
             TransactionType.CREATE_PROJECT -> createProjectWallet(transactionInfo, signedTransaction)
-            TransactionType.INVEST_ALLOWANCE -> projectInvestmentService.investInProject(signedTransaction)
-            TransactionType.INVEST -> projectInvestmentService.confirmInvestment(signedTransaction)
+            TransactionType.INVEST -> projectInvestmentService.investInProject(signedTransaction)
             TransactionType.MINT -> confirmMintTransaction(transactionInfo, signedTransaction)
             TransactionType.BURN_APPROVAL -> confirmApprovalTransaction(transactionInfo, signedTransaction)
             TransactionType.BURN -> burnTransaction(transactionInfo, signedTransaction)
@@ -60,6 +60,14 @@ class BroadcastTransactionController(
 
         transactionInfoService.deleteTransaction(transactionInfo.id)
         return ResponseEntity.ok(TxHashResponse(txHash))
+    }
+
+    private fun activateWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {
+        val walletId = transactionInfo.companionId
+            ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing wallet id")
+        val wallet = walletService.activateWallet(walletId, signedTransaction)
+        return wallet.hash
+            ?: throw InternalException(ErrorCode.TX_MISSING, "Wallet: $wallet is missing hash")
     }
 
     private fun createOrganizationWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {

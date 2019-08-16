@@ -66,7 +66,7 @@ class TransactionInfoServiceTest : JpaServiceTestBase() {
     @Test
     fun mustCreateInvestAllowanceTransaction() {
         suppose("Service can create invest allowance transactionInfo") {
-            testContext.transactionInfo = transactionInfoService.createInvestAllowanceTransaction(
+            testContext.transactionInfo = transactionInfoService.createInvestTransaction(
                     project.name, testContext.amount, userUuid)
         }
 
@@ -74,27 +74,10 @@ class TransactionInfoServiceTest : JpaServiceTestBase() {
             val optionalTx = transactionInfoRepository.findById(testContext.transactionInfo.id)
             assertThat(optionalTx).isPresent
             val tx = optionalTx.get()
-            assertThat(tx.type).isEqualTo(TransactionType.INVEST_ALLOWANCE)
-            assertThat(tx.userUuid).isEqualTo(userUuid)
-            assertThat(tx.description).contains(project.name)
-            assertThat(tx.description).contains("100.23")
-        }
-    }
-
-    @Test
-    fun mustCreateInvestTransaction() {
-        suppose("Service can create invest transactionInfo") {
-            testContext.transactionInfo = transactionInfoService.createInvestTransaction(
-                    project.name, userUuid)
-        }
-
-        verify("Invest transactionInfo is created") {
-            val optionalTx = transactionInfoRepository.findById(testContext.transactionInfo.id)
-            assertThat(optionalTx).isPresent
-            val tx = optionalTx.get()
             assertThat(tx.type).isEqualTo(TransactionType.INVEST)
             assertThat(tx.userUuid).isEqualTo(userUuid)
             assertThat(tx.description).contains(project.name)
+            assertThat(tx.description).contains("100.23")
         }
     }
 
