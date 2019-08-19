@@ -152,7 +152,7 @@ class WalletServiceImpl(
     }
 
     private fun createWallet(activationData: String, type: WalletType): Wallet {
-        if (walletRepository.findByHash(activationData).isPresent) {
+        if (walletRepository.findByActivationData(activationData).isPresent) {
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_HASH_EXISTS,
                     "Trying to create wallet: $type with existing activationData: $activationData")
         }

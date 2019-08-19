@@ -60,7 +60,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
     @Test
     fun mustBeAbleToActivateWallet() {
         suppose("TransactionInfo exists for activation wallet") {
-            testContext.wallet = createUnactivatedWallet(userUuid)
+            testContext.wallet = createUnactivatedWallet()
             testContext.transactionInfo =
                 createTransactionInfo(TransactionType.WALLET_ACTIVATE, userUuid, testContext.wallet.id)
         }
@@ -422,7 +422,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         return transactionInfoRepository.save(transactionInfo)
     }
 
-    private fun createUnactivatedWallet(userUuid: UUID): Wallet {
+    private fun createUnactivatedWallet(): Wallet {
         val wallet = Wallet(0, "activation-data", WalletType.USER, Currency.EUR, ZonedDateTime.now(), null, null)
         return walletRepository.save(wallet)
     }

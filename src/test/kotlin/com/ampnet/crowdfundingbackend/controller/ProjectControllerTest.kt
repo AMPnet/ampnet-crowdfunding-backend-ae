@@ -21,7 +21,6 @@ import com.ampnet.crowdfundingbackend.controller.pojo.response.ProjectListRespon
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.assertj.core.api.SoftAssertions.assertSoftly
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -116,34 +115,29 @@ class ProjectControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val projectResponse: ProjectWithFundingResponse = objectMapper.readValue(result.response.contentAsString)
-            assertSoftly {
-                it.assertThat(projectResponse.id).isNotNull
-                it.assertThat(projectResponse.name).isEqualTo(testContext.projectRequest.name)
-                it.assertThat(projectResponse.description).isEqualTo(testContext.projectRequest.description)
-                it.assertThat(projectResponse.location).isEqualTo(testContext.projectRequest.location)
-                it.assertThat(projectResponse.locationText).isEqualTo(testContext.projectRequest.locationText)
-                it.assertThat(projectResponse.returnOnInvestment)
-                        .isEqualTo(testContext.projectRequest.returnOnInvestment)
+            assertThat(projectResponse.id).isNotNull()
+            assertThat(projectResponse.name).isEqualTo(testContext.projectRequest.name)
+            assertThat(projectResponse.description).isEqualTo(testContext.projectRequest.description)
+            assertThat(projectResponse.location).isEqualTo(testContext.projectRequest.location)
+            assertThat(projectResponse.locationText).isEqualTo(testContext.projectRequest.locationText)
+            assertThat(projectResponse.returnOnInvestment).isEqualTo(testContext.projectRequest.returnOnInvestment)
+            assertThat(projectResponse.startDate).isEqualTo(testContext.projectRequest.startDate)
+            assertThat(projectResponse.endDate).isEqualTo(testContext.projectRequest.endDate)
+            assertThat(projectResponse.expectedFunding).isEqualTo(testContext.projectRequest.expectedFunding)
+            assertThat(projectResponse.currency).isEqualTo(testContext.projectRequest.currency)
+            assertThat(projectResponse.minPerUser).isEqualTo(testContext.projectRequest.minPerUser)
+            assertThat(projectResponse.maxPerUser).isEqualTo(testContext.projectRequest.maxPerUser)
+            assertThat(projectResponse.active).isEqualTo(testContext.projectRequest.active)
+            assertThat(projectResponse.mainImage).isNullOrEmpty()
+            assertThat(projectResponse.gallery).isNullOrEmpty()
+            assertThat(projectResponse.news).isNullOrEmpty()
 
-                it.assertThat(projectResponse.startDate).isEqualTo(testContext.projectRequest.startDate)
-                it.assertThat(projectResponse.endDate).isEqualTo(testContext.projectRequest.endDate)
-                it.assertThat(projectResponse.expectedFunding)
-                        .isEqualTo(testContext.projectRequest.expectedFunding)
-
-                it.assertThat(projectResponse.currency).isEqualTo(testContext.projectRequest.currency)
-                it.assertThat(projectResponse.minPerUser).isEqualTo(testContext.projectRequest.minPerUser)
-                it.assertThat(projectResponse.maxPerUser).isEqualTo(testContext.projectRequest.maxPerUser)
-                it.assertThat(projectResponse.active).isEqualTo(testContext.projectRequest.active)
-                it.assertThat(projectResponse.mainImage).isNullOrEmpty()
-                it.assertThat(projectResponse.gallery).isNullOrEmpty()
-                it.assertThat(projectResponse.news).isNullOrEmpty()
-                it.assertThat(projectResponse.organization.id).isEqualTo(organization.id)
-                it.assertThat(projectResponse.organization.name).isEqualTo(organization.name)
-                it.assertThat(projectResponse.organization.legalInfo).isEqualTo(organization.legalInfo)
-                it.assertThat(projectResponse.organization.approved).isEqualTo(organization.approved)
-            }
-
+            assertThat(projectResponse.organization.id).isEqualTo(organization.id)
+            assertThat(projectResponse.organization.name).isEqualTo(organization.name)
+            assertThat(projectResponse.organization.legalInfo).isEqualTo(organization.legalInfo)
+            assertThat(projectResponse.organization.approved).isEqualTo(organization.approved)
             assertThat(projectResponse.walletHash).isNull()
+
             testContext.projectId = projectResponse.id
         }
         verify("Project is stored in database") {
