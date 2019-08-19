@@ -51,6 +51,29 @@ include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateAdditionalWallet/h
 .Response
 include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateAdditionalWallet/http-response.adoc[]
 
+=== Organization Wallet
+Collection of endpoints for managing Organization wallet
+
+==== Get Organization wallet
+
+===== Successfully get wallet
+.Request
+include::{snippets}/WalletControllerTest/mustBeAbleToGetOrganizationWallet/http-request.adoc[]
+.Response
+include::{snippets}/WalletControllerTest/mustBeAbleToGetOrganizationWallet/http-response.adoc[]
+
+===== Missing organization
+.Request
+include::{snippets}/WalletControllerTest/mustThrowExceptionIfOrganizationIsMissing/http-request.adoc[]
+.Response
+include::{snippets}/WalletControllerTest/mustThrowExceptionIfOrganizationIsMissing/http-response.adoc[]
+
+==== Get transaction for creating organization wallet
+.Request
+include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-request.adoc[]
+.Response
+include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-response.adoc[]
+
 === Project Wallet
 Collection of endpoints for managing Project wallet
 
@@ -81,29 +104,6 @@ include::{snippets}/ProjectPublicControllerTest/mustThrowExceptionIfUserTriesToG
 include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateProjectWalletTransaction/http-request.adoc[]
 .Response
 include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateProjectWalletTransaction/http-response.adoc[]
-
-=== Organization Wallet
-Collection of endpoints for managing Organization wallet
-
-==== Get Organization wallet
-
-===== Successfully get wallet
-.Request
-include::{snippets}/WalletControllerTest/mustBeAbleToGetOrganizationWallet/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustBeAbleToGetOrganizationWallet/http-response.adoc[]
-
-===== Missing organization
-.Request
-include::{snippets}/WalletControllerTest/mustThrowExceptionIfOrganizationIsMissing/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustThrowExceptionIfOrganizationIsMissing/http-response.adoc[]
-
-==== Get transaction for creating organization wallet
-.Request
-include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-response.adoc[]
 
 === Wallet Activation
 Collection of endpoints for activating wallets by cooperative
