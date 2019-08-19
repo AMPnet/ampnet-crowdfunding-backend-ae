@@ -8,7 +8,7 @@ CREATE INDEX idx_transaction_info_user_uuid ON transaction_info(user_uuid);
 CREATE INDEX idx_user_wallet_user_uuid ON user_wallet(user_uuid);
 CREATE INDEX idx_organization_membership_user_uuid ON organization_membership(user_uuid);
 
-CREATE INDEX idx_pair_wallet_code_address ON pair_wallet_code(address);
+CREATE INDEX idx_pair_wallet_code_public_key ON pair_wallet_code(public_key);
 
 CREATE INDEX idx_deposit_reference ON deposit(reference);
 CREATE INDEX idx_deposit_user_uuid ON deposit(user_uuid);

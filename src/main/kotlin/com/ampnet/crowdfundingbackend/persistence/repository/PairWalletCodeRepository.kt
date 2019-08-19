@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.Optional
 
 interface PairWalletCodeRepository : JpaRepository<PairWalletCode, Int> {
-    fun findByAddress(address: String): Optional<PairWalletCode>
+    fun findByPublicKey(publicKey: String): Optional<PairWalletCode>
     fun findByCode(code: String): Optional<PairWalletCode>
 }

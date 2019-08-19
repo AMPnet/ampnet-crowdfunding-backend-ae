@@ -22,5 +22,4 @@ interface OrganizationRepository : JpaRepository<Organization, Int> {
     @Query("SELECT org FROM Organization org JOIN FETCH org.wallet wallet " +
         "WHERE wallet.hash IS NULL")
     fun findAllWithUnactivatedWallet(): List<Organization>
-
 }

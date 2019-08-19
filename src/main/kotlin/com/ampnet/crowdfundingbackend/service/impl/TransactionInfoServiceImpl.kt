@@ -25,7 +25,7 @@ class TransactionInfoServiceImpl(
     private val createProjectTitle = "Create Project"
     private val createProjectDescription = "You are signing transaction to create project: %s"
     private val investTitle = "Invest"
-    private val investDescription = "You are signing transaction to investment to project: %s with amount %d"
+    private val investDescription = "You are signing transaction to investment to project: %s with amount %.2f"
     private val mintTitle = "Mint"
     private val mintDescription = "You are singing mint transaction for wallet: %s"
     private val approvalTitle = "Approval"

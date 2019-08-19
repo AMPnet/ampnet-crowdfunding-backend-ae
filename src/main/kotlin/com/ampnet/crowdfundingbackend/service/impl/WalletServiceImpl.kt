@@ -1,7 +1,6 @@
 package com.ampnet.crowdfundingbackend.service.impl
 
 import com.ampnet.crowdfundingbackend.blockchain.BlockchainService
-import com.ampnet.crowdfundingbackend.controller.pojo.request.WalletCreateRequest
 import com.ampnet.crowdfundingbackend.enums.Currency
 import com.ampnet.crowdfundingbackend.enums.WalletType
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
@@ -74,15 +73,15 @@ class WalletServiceImpl(
 
     @Transactional
     @Throws(ResourceAlreadyExistsException::class, InternalException::class)
-    override fun createUserWallet(userUuid: UUID, request: WalletCreateRequest): Wallet {
+    override fun createUserWallet(userUuid: UUID, publicKey: String): Wallet {
         userWalletRepository.findByUserUuid(userUuid).ifPresent {
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_EXISTS, "User: $userUuid already has a wallet.")
         }
-        pairWalletCodeRepository.findByAddress(request.address).ifPresent {
+        pairWalletCodeRepository.findByPublicKey(publicKey).ifPresent {
             pairWalletCodeRepository.delete(it)
         }
 
-        val wallet = createWallet(request.publicKey, WalletType.USER)
+        val wallet = createWallet(publicKey, WalletType.USER)
         val userWallet = UserWallet(0, userUuid, wallet)
         userWalletRepository.save(userWallet)
         return wallet
@@ -138,12 +137,12 @@ class WalletServiceImpl(
     }
 
     @Transactional
-    override fun generatePairWalletCode(request: WalletCreateRequest): PairWalletCode {
-        pairWalletCodeRepository.findByAddress(request.address).ifPresent {
+    override fun generatePairWalletCode(publicKey: String): PairWalletCode {
+        pairWalletCodeRepository.findByPublicKey(publicKey).ifPresent {
             pairWalletCodeRepository.delete(it)
         }
         val code = generatePairWalletCode()
-        val pairWalletCode = PairWalletCode(0, request.address, request.publicKey, code, ZonedDateTime.now())
+        val pairWalletCode = PairWalletCode(0, publicKey, code, ZonedDateTime.now())
         return pairWalletCodeRepository.save(pairWalletCode)
     }
 

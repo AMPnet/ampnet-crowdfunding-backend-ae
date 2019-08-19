@@ -26,8 +26,7 @@ CREATE TABLE user_wallet (
 );
 CREATE TABLE pair_wallet_code(
     id SERIAL PRIMARY KEY,
-    address VARCHAR(66) UNIQUE NOT NULL,
-    public_key VARCHAR UNIQUE NOT NULL,
+    public_key VARCHAR(128) UNIQUE NOT NULL,
     code VARCHAR(6) UNIQUE NOT NULL,
     created_at TIMESTAMP NOT NULL
 );

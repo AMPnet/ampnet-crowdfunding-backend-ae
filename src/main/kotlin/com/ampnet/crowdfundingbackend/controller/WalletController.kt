@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import javax.validation.Valid
 
 @RestController
 class WalletController(
@@ -39,9 +38,9 @@ class WalletController(
     }
 
     @PostMapping("/wallet/pair")
-    fun generatePairWalletCode(@RequestBody @Valid request: WalletCreateRequest): ResponseEntity<PairWalletResponse> {
+    fun generatePairWalletCode(@RequestBody request: WalletCreateRequest): ResponseEntity<PairWalletResponse> {
         logger.debug { "Received request to pair wallet: $request" }
-        val pairWalletCode = walletService.generatePairWalletCode(request)
+        val pairWalletCode = walletService.generatePairWalletCode(request.publicKey)
         return ResponseEntity.ok(PairWalletResponse(pairWalletCode))
     }
 
@@ -58,10 +57,10 @@ class WalletController(
     }
 
     @PostMapping("/wallet")
-    fun createWallet(@RequestBody @Valid request: WalletCreateRequest): ResponseEntity<WalletResponse> {
+    fun createWallet(@RequestBody request: WalletCreateRequest): ResponseEntity<WalletResponse> {
         val userPrincipal = ControllerUtils.getUserPrincipalFromSecurityContext()
         logger.debug { "Received request from user: ${userPrincipal.uuid} to create wallet: $request" }
-        val wallet = walletService.createUserWallet(userPrincipal.uuid, request)
+        val wallet = walletService.createUserWallet(userPrincipal.uuid, request.publicKey)
         val response = WalletResponse(wallet, 0)
         return ResponseEntity.ok(response)
     }

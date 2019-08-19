@@ -1,6 +1,5 @@
 package com.ampnet.crowdfundingbackend.service
 
-import com.ampnet.crowdfundingbackend.controller.pojo.request.WalletCreateRequest
 import com.ampnet.crowdfundingbackend.exception.ResourceAlreadyExistsException
 import com.ampnet.crowdfundingbackend.enums.Currency
 import com.ampnet.crowdfundingbackend.enums.WalletType
@@ -30,7 +29,6 @@ class WalletServiceTest : JpaServiceTestBase() {
     }
     private lateinit var testContext: TestContext
 
-    private val defaultAddress = "0x14bC6a8219c798394726f8e86E040A878da1d99D"
     private val defaultAddressHash = "0x4e4ee58ff3a9e9e78c2dfdbac0d1518e4e1039f9189267e1dc8d3e35cbdf7892"
     private val defaultPublicKey = "0xC2D7CF95645D33006175B78989035C7c9061d3F9"
     private val defaultSignedTransaction = "SignedTransaction"
@@ -45,12 +43,12 @@ class WalletServiceTest : JpaServiceTestBase() {
     @Test
     fun mustBeAbleToGetWalletForUserId() {
         suppose("User has a wallet") {
-            createWalletForUser(userUuid, defaultAddress)
+            createWalletForUser(userUuid, defaultAddressHash)
         }
 
         verify("Service must fetch wallet for user with id") {
             val wallet = walletService.getUserWallet(userUuid) ?: fail("User must have a wallet")
-            assertThat(wallet.hash).isEqualTo(defaultAddress)
+            assertThat(wallet.hash).isEqualTo(defaultAddressHash)
             assertThat(wallet.currency).isEqualTo(Currency.EUR)
             assertThat(wallet.type).isEqualTo(WalletType.USER)
         }
@@ -58,31 +56,27 @@ class WalletServiceTest : JpaServiceTestBase() {
 
     @Test
     fun mustBeAbleToCreateWalletForUser() {
-        suppose("Blockchain service successfully adds wallet") {
-            Mockito.`when`(
-                mockedBlockchainService.addWallet(defaultPublicKey)
-            ).thenReturn(TransactionData(defaultAddressHash))
-        }
         suppose("Wallet has pair wallet code") {
             databaseCleanerService.deleteAllPairWalletCodes()
-            val pairWalletCode = PairWalletCode(0, defaultAddress, defaultPublicKey, "000000", ZonedDateTime.now())
+            val pairWalletCode = PairWalletCode(0, defaultPublicKey, "000000", ZonedDateTime.now())
             pairWalletCodeRepository.save(pairWalletCode)
         }
 
         verify("Service can create wallet for a user") {
-            val request = WalletCreateRequest(defaultAddress, defaultPublicKey)
-            val wallet = walletService.createUserWallet(userUuid, request)
-            assertThat(wallet.hash).isEqualTo(defaultAddressHash)
+            val wallet = walletService.createUserWallet(userUuid, defaultPublicKey)
+            assertThat(wallet.activationData).isEqualTo(defaultPublicKey)
             assertThat(wallet.currency).isEqualTo(Currency.EUR)
             assertThat(wallet.type).isEqualTo(WalletType.USER)
             assertThat(wallet.createdAt).isBeforeOrEqualTo(ZonedDateTime.now())
+            assertThat(wallet.hash).isNull()
+            assertThat(wallet.activatedAt).isNull()
         }
         verify("Wallet is assigned to the user") {
             val wallet = walletService.getUserWallet(userUuid) ?: fail("User must have a wallet")
-            assertThat(wallet.hash).isEqualTo(defaultAddressHash)
+            assertThat(wallet.activationData).isEqualTo(defaultPublicKey)
         }
         verify("Pair wallet code is deleted") {
-            val optionalPairWalletCode = pairWalletCodeRepository.findByAddress(defaultAddress)
+            val optionalPairWalletCode = pairWalletCodeRepository.findByPublicKey(defaultPublicKey)
             assertThat(optionalPairWalletCode).isNotPresent
         }
     }
@@ -101,16 +95,19 @@ class WalletServiceTest : JpaServiceTestBase() {
 
         verify("Service can create wallet for project") {
             val wallet = walletService.createProjectWallet(testContext.project, defaultSignedTransaction)
-            assertThat(wallet.hash).isEqualTo(defaultAddressHash)
+            assertThat(wallet.activationData).isEqualTo(defaultAddressHash)
             assertThat(wallet.currency).isEqualTo(Currency.EUR)
             assertThat(wallet.type).isEqualTo(WalletType.PROJECT)
             assertThat(wallet.createdAt).isBeforeOrEqualTo(ZonedDateTime.now())
+            assertThat(wallet.hash).isNull()
+            assertThat(wallet.activatedAt).isNull()
         }
         verify("Wallet is assigned to the project") {
             val optionalProjectWithWallet = projectRepository.findByIdWithWallet(testContext.project.id)
             assertThat(optionalProjectWithWallet).isPresent
-            val walletHash = getWalletHash(optionalProjectWithWallet.get().wallet)
-            assertThat(walletHash).isEqualTo(defaultAddressHash)
+            val projectWallet = optionalProjectWithWallet.get().wallet ?: fail("Missing project wallet")
+            assertThat(projectWallet.activationData).isEqualTo(defaultAddressHash)
+            assertThat(projectWallet.hash).isNull()
         }
     }
 
@@ -122,8 +119,7 @@ class WalletServiceTest : JpaServiceTestBase() {
 
         verify("Service cannot create additional account") {
             val exception = assertThrows<ResourceAlreadyExistsException> {
-                val request = WalletCreateRequest(defaultAddress, defaultPublicKey)
-                walletService.createUserWallet(userUuid, request)
+                walletService.createUserWallet(userUuid, defaultPublicKey)
             }
             assertThat(exception.errorCode).isEqualTo(ErrorCode.WALLET_EXISTS)
         }
@@ -231,7 +227,7 @@ class WalletServiceTest : JpaServiceTestBase() {
     @Test
     fun mustGenerateTransactionToCreateOrganizationWallet() {
         suppose("User has a wallet") {
-            testContext.wallet = createWalletForUser(userUuid, defaultAddress)
+            testContext.wallet = createWalletForUser(userUuid, defaultAddressHash)
         }
         suppose("Organization exists") {
             testContext.organization = createOrganization("Org", userUuid)
@@ -243,8 +239,8 @@ class WalletServiceTest : JpaServiceTestBase() {
         }
 
         verify("Service can generate transaction") {
-            val transaction = walletService.generateTransactionToCreateOrganizationWallet(
-                    testContext.organization, userUuid)
+            val transaction = walletService
+                .generateTransactionToCreateOrganizationWallet(testContext.organization, userUuid)
             assertThat(transaction.transactionData).isEqualTo(defaultTransactionData)
         }
     }
@@ -262,16 +258,19 @@ class WalletServiceTest : JpaServiceTestBase() {
 
         verify("Service can create wallet for organization") {
             val wallet = walletService.createOrganizationWallet(testContext.organization, defaultSignedTransaction)
-            assertThat(wallet.hash).isEqualTo(defaultAddressHash)
+            assertThat(wallet.activationData).isEqualTo(defaultAddressHash)
             assertThat(wallet.currency).isEqualTo(Currency.EUR)
             assertThat(wallet.type).isEqualTo(WalletType.ORG)
             assertThat(wallet.createdAt).isBeforeOrEqualTo(ZonedDateTime.now())
+            assertThat(wallet.hash).isNull()
+            assertThat(wallet.activatedAt).isNull()
         }
         verify("Wallet is assigned to the organization") {
             val optionalOrganization = organizationRepository.findById(testContext.organization.id)
             assertThat(optionalOrganization).isPresent
-            val walletHash = getWalletHash(optionalOrganization.get().wallet)
-            assertThat(walletHash).isEqualTo(defaultAddressHash)
+            val wallet = optionalOrganization.get().wallet ?: fail("Missing organization wallet")
+            assertThat(wallet.activationData).isEqualTo(defaultAddressHash)
+            assertThat(wallet.hash).isNull()
         }
     }
 
@@ -319,14 +318,12 @@ class WalletServiceTest : JpaServiceTestBase() {
     fun mustGenerateNewPairWalletCodeForExistingAddress() {
         suppose("Pair wallet code exists") {
             databaseCleanerService.deleteAllPairWalletCodes()
-            val pairWalletCode = PairWalletCode(0, "0x00000", "adr_423242", "SD432X", ZonedDateTime.now())
+            val pairWalletCode = PairWalletCode(0, "adr_423242", "SD432X", ZonedDateTime.now())
             testContext.pairWalletCode = pairWalletCodeRepository.save(pairWalletCode)
         }
 
         verify("Service will create new pair wallet code") {
-            val requests = WalletCreateRequest(testContext.pairWalletCode.address, testContext.pairWalletCode.publicKey)
-            val newPairWalletCode = walletService.generatePairWalletCode(requests)
-            assertThat(newPairWalletCode.address).isEqualTo(testContext.pairWalletCode.address)
+            val newPairWalletCode = walletService.generatePairWalletCode(testContext.pairWalletCode.publicKey)
             assertThat(newPairWalletCode.publicKey).isEqualTo(testContext.pairWalletCode.publicKey)
         }
         verify("Old pair wallet code is deleted") {

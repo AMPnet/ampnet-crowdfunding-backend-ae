@@ -30,6 +30,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
 
     private val signedTransaction = "SignedTransaction"
     private val txHash = "tx_hash"
+    private val activationData = "activation_data"
 
     private lateinit var organization: Organization
     private lateinit var testContext: TestContext
@@ -101,7 +102,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         suppose("Blockchain service successfully generates transaction to create organization wallet") {
             Mockito.`when`(
                     blockchainService.postTransaction(signedTransaction)
-            ).thenReturn(txHash)
+            ).thenReturn(activationData)
         }
 
         verify("User can create organization wallet") {
@@ -113,17 +114,19 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val txHashResponse: TxHashResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(txHashResponse.txHash).isEqualTo(txHash)
+            assertThat(txHashResponse.txHash).isEqualTo(activationData)
         }
         verify("Organization wallet is created") {
             val optionalOrganization = organizationRepository.findById(organization.id)
             assertThat(optionalOrganization).isPresent
             val organizationWallet = optionalOrganization.get().wallet ?: fail("Wallet must not be null")
             assertThat(organizationWallet.id).isNotNull()
-            assertThat(organizationWallet.hash).isEqualTo(txHash)
+            assertThat(organizationWallet.activationData).isEqualTo(activationData)
             assertThat(organizationWallet.currency).isEqualTo(Currency.EUR)
             assertThat(organizationWallet.type).isEqualTo(WalletType.ORG)
             assertThat(organizationWallet.createdAt).isBeforeOrEqualTo(ZonedDateTime.now())
+            assertThat(organizationWallet.hash).isNull()
+            assertThat(organizationWallet.activatedAt).isNull()
         }
         verify("TransactionInfo is deleted") {
             val transactionInfo = transactionInfoRepository.findById(testContext.transactionInfo.id)
@@ -178,7 +181,7 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
         suppose("Blockchain service successfully adds project wallet") {
             Mockito.`when`(
                     blockchainService.postTransaction(signedTransaction)
-            ).thenReturn(txHash)
+            ).thenReturn(activationData)
         }
 
         verify("User can create project wallet") {
@@ -190,17 +193,19 @@ class BroadcastTransactionControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val txHashResponse: TxHashResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(txHashResponse.txHash).isEqualTo(txHash)
+            assertThat(txHashResponse.txHash).isEqualTo(activationData)
         }
         verify("Wallet is created") {
             val optionalProject = projectRepository.findByIdWithWallet(testContext.project.id)
             assertThat(optionalProject).isPresent
             val projectWallet = optionalProject.get().wallet ?: fail("Wallet must not be null")
             assertThat(projectWallet.id).isNotNull()
-            assertThat(projectWallet.hash).isEqualTo(txHash)
+            assertThat(projectWallet.activationData).isEqualTo(activationData)
             assertThat(projectWallet.currency).isEqualTo(Currency.EUR)
             assertThat(projectWallet.type).isEqualTo(WalletType.PROJECT)
             assertThat(projectWallet.createdAt).isBeforeOrEqualTo(ZonedDateTime.now())
+            assertThat(projectWallet.hash).isNull()
+            assertThat(projectWallet.activatedAt).isNull()
         }
         verify("TransactionInfo is deleted") {
             val transactionInfo = transactionInfoRepository.findById(testContext.transactionInfo.id)

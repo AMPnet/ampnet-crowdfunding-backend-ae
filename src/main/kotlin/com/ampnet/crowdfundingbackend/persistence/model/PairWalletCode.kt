@@ -15,15 +15,12 @@ data class PairWalletCode(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int,
 
-    @Column(nullable = false, length = 66)
-    var address: String,
-
-    @Column(nullable = false)
-    var publicKey: String,
+    @Column(nullable = false, length = 128)
+    val publicKey: String,
 
     @Column(nullable = false, length = 6)
-    var code: String,
+    val code: String,
 
     @Column(nullable = false)
-    var createdAt: ZonedDateTime
+    val createdAt: ZonedDateTime
 )
