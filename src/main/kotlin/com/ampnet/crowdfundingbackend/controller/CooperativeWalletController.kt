@@ -8,7 +8,6 @@ import com.ampnet.crowdfundingbackend.controller.pojo.response.TransactionRespon
 import com.ampnet.crowdfundingbackend.controller.pojo.response.UserWithWalletListResponse
 import com.ampnet.crowdfundingbackend.controller.pojo.response.UserWithWalletResponse
 import com.ampnet.crowdfundingbackend.service.CooperativeWalletService
-import com.ampnet.crowdfundingbackend.service.WalletService
 import mu.KLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class CooperativeWalletController(
-    private val walletService: WalletService,
     private val cooperativeWalletService: CooperativeWalletService
 ) {
 
@@ -30,7 +28,7 @@ class CooperativeWalletController(
     fun activateWalletTransaction(@PathVariable id: Int): ResponseEntity<TransactionResponse> {
         val userPrincipal = ControllerUtils.getUserPrincipalFromSecurityContext()
         logger.info { "Received request to activate wallet: $id by user: ${userPrincipal.uuid}" }
-        val transaction = walletService.generateWalletActivationTransaction(id, userPrincipal.uuid)
+        val transaction = cooperativeWalletService.generateWalletActivationTransaction(id, userPrincipal.uuid)
         return ResponseEntity.ok(TransactionResponse(transaction))
     }
 

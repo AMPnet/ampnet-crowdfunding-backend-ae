@@ -45,18 +45,6 @@ include::{snippets}/WalletControllerTest/mustBeAbleToCreateWallet/http-request.a
 .Response
 include::{snippets}/WalletControllerTest/mustBeAbleToCreateWallet/http-response.adoc[]
 
-===== Invalid wallet address
-.Request
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-response.adoc[]
-
-===== Active user cannot create wallet with invalid wallet address
-.Request
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-response.adoc[]
-
 ===== Active user cannot create additional wallet
 .Request
 include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateAdditionalWallet/http-request.adoc[]
@@ -94,12 +82,6 @@ include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateProjectWalletTrans
 .Response
 include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateProjectWalletTransaction/http-response.adoc[]
 
-===== Invalid address
-.Request
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-request.adoc[]
-.Response
-include::{snippets}/WalletControllerTest/mustNotBeAbleToCreateWalletWithInvalidAddress/http-response.adoc[]
-
 === Organization Wallet
 Collection of endpoints for managing Organization wallet
 
@@ -122,6 +104,38 @@ include::{snippets}/WalletControllerTest/mustThrowExceptionIfOrganizationIsMissi
 include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-request.adoc[]
 .Response
 include::{snippets}/WalletControllerTest/mustBeAbleToGetCreateOrganizationWallet/http-response.adoc[]
+
+=== Wallet Activation
+Collection of endpoints for activating wallets by cooperative
+
+==== Get unactivated wallets
+Must have Admin role - privilege: `PrivilegeType.PRA_WALLET`
+
+===== User wallets
+.Request
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetUsersWithUnactivatedWallet/http-request.adoc[]
+.Response
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetUsersWithUnactivatedWallet/http-response.adoc[]
+
+===== Organization wallets
+.Request
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetOrganizationsWithUnactivatedWallet/http-request.adoc[]
+.Response
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetOrganizationsWithUnactivatedWallet/http-response.adoc[]
+
+===== Project wallets
+.Request
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetProjectsWithUnactivatedWallet/http-request.adoc[]
+.Response
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetProjectsWithUnactivatedWallet/http-response.adoc[]
+
+==== Generate wallet activation transaction
+Must have Admin role - privilege: `PrivilegeType.PWA_WALLET`
+
+.Request
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetActivateWalletTransaction/http-request.adoc[]
+.Response
+include::{snippets}/CooperativeWalletControllerTest/mustBeAbleToGetActivateWalletTransaction/http-response.adoc[]
 
 == Organization API
 Collection of endpoints for managing organization
@@ -151,21 +165,6 @@ include::{snippets}/OrganizationControllerTest/mustReturnListOfOrganizations/htt
 include::{snippets}/OrganizationControllerTest/mustBeAbleToGetPersonalOrganizations/http-request.adoc[]
 .Response
 include::{snippets}/OrganizationControllerTest/mustBeAbleToGetPersonalOrganizations/http-response.adoc[]
-
-=== Approve organization
-To approve organization user must have a privilege: `PrivilegeType.PWA_ORG_APPROVE`
-
-==== Approve organization with Admin role
-.Request
-include::{snippets}/OrganizationControllerTest/mustBeAbleToApproveOrganization/http-request.adoc[]
-.Response
-include::{snippets}/OrganizationControllerTest/mustBeAbleToApproveOrganization/http-response.adoc[]
-
-==== Cannot approve organization without privilege
-.Request
-include::{snippets}/OrganizationControllerTest/mustNotBeAbleApproveOrganizationWithoutPrivilege/http-request.adoc[]
-.Response
-include::{snippets}/OrganizationControllerTest/mustNotBeAbleApproveOrganizationWithoutPrivilege/http-response.adoc[]
 
 === Documents
 
@@ -336,19 +335,11 @@ include::{snippets}/ProjectControllerTest/mustBeAbleToRemoveNews/http-request.ad
 .Response
 include::{snippets}/ProjectControllerTest/mustBeAbleToRemoveNews/http-response.adoc[]
 
-=== Greenvest
-
-==== Generate transaction to greenvest in project
+=== Generate transaction to greenvest in project
 .Request
 include::{snippets}/ProjectControllerTest/mustBeAbleToGenerateInvestmentTransaction/http-request.adoc[]
 .Response
 include::{snippets}/ProjectControllerTest/mustBeAbleToGenerateInvestmentTransaction/http-response.adoc[]
-
-==== Generate transaction to approve greenvestment in project
-.Request
-include::{snippets}/ProjectControllerTest/mustBeAbleToGenerateConfirmInvestmentTransaction/http-request.adoc[]
-.Response
-include::{snippets}/ProjectControllerTest/mustBeAbleToGenerateConfirmInvestmentTransaction/http-response.adoc[]
 
 == Search API
 
@@ -371,46 +362,6 @@ include::{snippets}/BroadcastTransactionControllerTest/mustBeAbleToCreateOrganiz
 include::{snippets}/BroadcastTransactionControllerTest/mustNotBeAbleToPostNonExistingTransaction/http-request.adoc[]
 .Response
 include::{snippets}/BroadcastTransactionControllerTest/mustNotBeAbleToPostNonExistingTransaction/http-response.adoc[]
-
-== Issuing Authority API
-
-=== Mint transaction
-
-==== Generate transaction
-
-===== Successful
-.Request
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToGenerateMintTransaction/http-request.adoc[]
-.Response
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToGenerateMintTransaction/http-response.adoc[]
-
-===== Missing user wallet
-Cannot generate mint transaction if the user wallet is missing
-
-.Request
-include::{snippets}/IssuingAuthorityControllerTest/mustNotBeAbleToGenerateMintTransactionForMissingUserWallet/http-request.adoc[]
-.Response
-include::{snippets}/IssuingAuthorityControllerTest/mustNotBeAbleToGenerateMintTransactionForMissingUserWallet/http-response.adoc[]
-
-==== Post transaction
-.Request
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToPostMintTransaction/http-request.adoc[]
-.Response
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToPostMintTransaction/http-response.adoc[]
-
-=== Burn transaction
-
-==== Generate transaction
-.Request
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToGenerateMintTransaction/http-request.adoc[]
-.Response
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToGenerateMintTransaction/http-response.adoc[]
-
-==== Post transaction
-.Request
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToPostMintTransaction/http-request.adoc[]
-.Response
-include::{snippets}/IssuingAuthorityControllerTest/mustBeAbleToPostMintTransaction/http-response.adoc[]
 
 == Withdraw API
 

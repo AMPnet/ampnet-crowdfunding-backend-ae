@@ -7,6 +7,7 @@ import com.ampnet.crowdfundingbackend.exception.InternalException
 import com.ampnet.crowdfundingbackend.exception.InvalidRequestException
 import com.ampnet.crowdfundingbackend.exception.ResourceNotFoundException
 import com.ampnet.crowdfundingbackend.persistence.model.TransactionInfo
+import com.ampnet.crowdfundingbackend.service.CooperativeWalletService
 import com.ampnet.crowdfundingbackend.service.DepositService
 import com.ampnet.crowdfundingbackend.service.OrganizationService
 import com.ampnet.crowdfundingbackend.service.ProjectInvestmentService
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 class BroadcastTransactionController(
     private val transactionInfoService: TransactionInfoService,
     private val walletService: WalletService,
+    private val cooperativeWalletService: CooperativeWalletService,
     private val organizationService: OrganizationService,
     private val projectService: ProjectService,
     private val projectInvestmentService: ProjectInvestmentService,
@@ -65,7 +67,7 @@ class BroadcastTransactionController(
     private fun activateWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val walletId = transactionInfo.companionId
             ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing wallet id")
-        val wallet = walletService.activateWallet(walletId, signedTransaction)
+        val wallet = cooperativeWalletService.activateWallet(walletId, signedTransaction)
         return wallet.hash
             ?: throw InternalException(ErrorCode.TX_MISSING, "Wallet: $wallet is missing hash")
     }

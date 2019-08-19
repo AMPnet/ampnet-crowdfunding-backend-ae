@@ -8,8 +8,6 @@ import com.ampnet.crowdfundingbackend.persistence.model.PairWalletCode
 import java.util.UUID
 
 interface WalletService {
-    fun generateWalletActivationTransaction(walletId: Int, userUuid: UUID): TransactionDataAndInfo
-    fun activateWallet(walletId: Int, signedTransaction: String): Wallet
     fun getWalletBalance(wallet: Wallet): Long
     fun getUserWallet(userUuid: UUID): Wallet?
     fun createUserWallet(userUuid: UUID, publicKey: String): Wallet

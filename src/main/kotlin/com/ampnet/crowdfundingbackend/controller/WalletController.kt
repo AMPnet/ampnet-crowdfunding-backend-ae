@@ -61,7 +61,7 @@ class WalletController(
         val userPrincipal = ControllerUtils.getUserPrincipalFromSecurityContext()
         logger.debug { "Received request from user: ${userPrincipal.uuid} to create wallet: $request" }
         val wallet = walletService.createUserWallet(userPrincipal.uuid, request.publicKey)
-        val response = WalletResponse(wallet, 0)
+        val response = WalletResponse(wallet)
         return ResponseEntity.ok(response)
     }
 
@@ -82,7 +82,7 @@ class WalletController(
     }
 
     /* Organization Wallet */
-    @GetMapping("wallet/organization/{organizationId}")
+    @GetMapping("/wallet/organization/{organizationId}")
     fun getOrganizationWallet(@PathVariable organizationId: Int): ResponseEntity<WalletResponse> {
         val userPrincipal = ControllerUtils.getUserPrincipalFromSecurityContext()
         logger.debug {
@@ -98,7 +98,7 @@ class WalletController(
         return ResponseEntity.notFound().build()
     }
 
-    @GetMapping("wallet/organization/{organizationId}/transaction")
+    @GetMapping("/wallet/organization/{organizationId}/transaction")
     fun getTransactionToCreateOrganizationWallet(
         @PathVariable organizationId: Int
     ): ResponseEntity<TransactionResponse> {
