@@ -34,5 +34,10 @@ interface ProjectRepository : JpaRepository<Project, Int> {
             "WHERE project.active=true")
     fun findAllActiveWithWallet(): List<Project>
 
+    @Query("SELECT project FROM Project project " +
+        "JOIN FETCH project.wallet wallet " +
+        "WHERE wallet.hash IS NULL")
+    fun findAllWithUnactivatedWallet(): List<Project>
+
     fun findByNameContainingIgnoreCase(name: String): List<Project>
 }
