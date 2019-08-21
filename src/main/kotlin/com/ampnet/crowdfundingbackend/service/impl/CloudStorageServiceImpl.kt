@@ -28,6 +28,7 @@ class CloudStorageServiceImpl(applicationProperties: ApplicationProperties) : Cl
     private val folder = applicationProperties.fileStorage.folder
     private val acl = ObjectCannedACL.PUBLIC_READ
     private val digitalOceanSpacesLink = "digitaloceanspaces.com/"
+    private val multipleSpacesPattern = "\\s+".toRegex()
 
     // Credentials are provided via Env variables: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
     private val s3client: S3Client by lazy {
@@ -80,7 +81,8 @@ class CloudStorageServiceImpl(applicationProperties: ApplicationProperties) : Cl
 
     fun getKeyFromName(name: String): String {
         val timestamp = ZonedDateTime.now().toEpochSecond()
-        return name.replaceFirst(".", "-$timestamp.")
+        val nameWithoutSpaces = name.replace(multipleSpacesPattern, "_")
+        return nameWithoutSpaces.replaceFirst(".", "-$timestamp.")
     }
 
     fun getKeyFromLink(link: String): String = link.split(digitalOceanSpacesLink)[1]
