@@ -6,8 +6,8 @@ executors:
       - image: circleci/openjdk:8-jdk
       - image: circleci/postgres:10.7-ram
         environment:
-          POSTGRES_USER: crowdfunding_test
-          POSTGRES_DB: crowdfunding_test
+          POSTGRES_USER: crowdfunding_ae_test
+          POSTGRES_DB: crowdfunding_ae_test
           POSTGRES_PASSWORD: password
     working_directory: ~/repo
     environment:
@@ -46,9 +46,6 @@ jobs:
       - run:
           name: Verify test coverage minimum limit
           command: gradle jacocoTestCoverageVerification
-      - run:
-          name: Generate API documentation
-          command: gradle asciidoctor
 
   deploy:
     executor: java-executor
