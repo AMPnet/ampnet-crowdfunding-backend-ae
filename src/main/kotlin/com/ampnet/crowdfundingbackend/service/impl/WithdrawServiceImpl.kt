@@ -72,7 +72,7 @@ class WithdrawServiceImpl(
             throw InvalidRequestException(ErrorCode.WALLET_WITHDRAW_MISSING, "Withdraw does not belong to this user")
         }
         validateWithdrawForApproval(withdraw)
-        val userWallet = getUserWallet(withdraw.userUuid)
+        val userWallet = ServiceUtils.getUserWalletHash(withdraw.userUuid, userWalletRepository)
         val data = blockchainService.generateApproveBurnTransaction(userWallet, withdraw.amount)
         val info = transactionInfoService.createApprovalTransaction(withdraw.amount, user, withdraw.id)
         return TransactionDataAndInfo(data, info)
@@ -92,7 +92,7 @@ class WithdrawServiceImpl(
     override fun generateBurnTransaction(withdrawId: Int, user: UUID): TransactionDataAndInfo {
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForBurn(withdraw)
-        val userWallet = getUserWallet(withdraw.userUuid)
+        val userWallet = ServiceUtils.getUserWalletHash(withdraw.userUuid, userWalletRepository)
         val data = blockchainService.generateBurnTransaction(userWallet)
         val info = transactionInfoService.createBurnTransaction(withdraw.amount, user, withdraw.id)
         withdraw.burnedBy = user
@@ -121,12 +121,7 @@ class WithdrawServiceImpl(
     }
 
     private fun checkIfUserHasEnoughFunds(user: UUID, amount: Long) {
-        val wallet = userWalletRepository.findByUserUuid(user).orElseThrow {
-            throw ResourceNotFoundException(ErrorCode.WALLET_MISSING,
-                    "User must have a wallet to make Withdraw request")
-        }
-        val walletHash = wallet.wallet.hash
-            ?: throw throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
+        val walletHash = ServiceUtils.getUserWalletHash(user, userWalletRepository)
         val balance = blockchainService.getBalance(walletHash)
         if (amount > balance) {
             throw InvalidRequestException(ErrorCode.WALLET_FUNDS, "Insufficient funds")
@@ -165,14 +160,5 @@ class WithdrawServiceImpl(
         return withdrawRepository.findById(withdrawId).orElseThrow {
             throw ResourceNotFoundException(ErrorCode.WALLET_WITHDRAW_MISSING, "Missing withdraw with id: $withdrawId")
         }
-    }
-
-    private fun getUserWallet(user: UUID): String {
-        val userWallet = userWalletRepository.findByUserUuid(user).orElseThrow {
-            throw ResourceNotFoundException(ErrorCode.WALLET_MISSING,
-                    "User must have a wallet to create Withdraw request")
-        }
-        return userWallet.wallet.hash
-            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Wallet not activated")
     }
 }
