@@ -105,7 +105,7 @@ class BlockchainServiceImpl(
     }
 
     override fun postTransaction(transaction: String): String {
-        logger.info { "Post transaction: $transaction" }
+        logger.info { "Post transaction" }
         try {
             val response = serviceBlockingStub.postTransaction(
                 PostTxRequest.newBuilder()
