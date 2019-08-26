@@ -37,8 +37,7 @@ class PortfolioServiceImpl(
         val transactions = blockchainService.getTransactions(userWallet)
         val investments = sumTransactionForType(transactions, TransactionsResponse.Transaction.Type.INVEST)
         val earnings = sumTransactionForType(transactions, TransactionsResponse.Transaction.Type.SHARE_PAYOUT)
-        val roi = earnings.toDouble().div(investments) * 100
-        return PortfolioStats(investments, earnings, roi)
+        return PortfolioStats(investments, earnings)
     }
 
     private fun sumTransactionForType(

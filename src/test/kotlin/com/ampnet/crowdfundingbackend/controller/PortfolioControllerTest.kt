@@ -97,7 +97,6 @@ class PortfolioControllerTest : ControllerTestBase() {
             val stats: PortfolioStats = objectMapper.readValue(result.response.contentAsString)
             assertThat(stats.investments).isEqualTo(2000)
             assertThat(stats.earnings).isEqualTo(20)
-            assertThat(stats.returnOnInvestment).isEqualTo(1.toDouble())
         }
     }
 

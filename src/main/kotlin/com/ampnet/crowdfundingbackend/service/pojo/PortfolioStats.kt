@@ -1,3 +1,3 @@
 package com.ampnet.crowdfundingbackend.service.pojo
 
-data class PortfolioStats(val investments: Long, val earnings: Long, val returnOnInvestment: Double)
+data class PortfolioStats(val investments: Long, val earnings: Long)
