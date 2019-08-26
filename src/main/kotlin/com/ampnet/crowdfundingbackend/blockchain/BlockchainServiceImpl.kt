@@ -87,7 +87,7 @@ class BlockchainServiceImpl(
     override fun generateProjectWalletTransaction(request: GenerateProjectWalletRequest): TransactionData {
         logger.info { "Generating create Project transaction" }
         try {
-            val endTimeInSeconds = request.endDate.toEpochSecond()
+            val endTimeInMilliSeconds = request.endDate.toInstant().toEpochMilli()
             val response = serviceBlockingStub.generateCreateProjectTx(
                 GenerateCreateProjectTxRequest.newBuilder()
                     .setFromTxHash(request.userWalletHash)
@@ -95,7 +95,7 @@ class BlockchainServiceImpl(
                     .setMaxInvestmentPerUser(request.maxPerUser.toString())
                     .setMinInvestmentPerUser(request.minPerUser.toString())
                     .setInvestmentCap(request.investmentCap.toString())
-                    .setEndInvestmentTime(endTimeInSeconds.toString())
+                    .setEndInvestmentTime(endTimeInMilliSeconds.toString())
                     .build()
             )
             return TransactionData(response)
