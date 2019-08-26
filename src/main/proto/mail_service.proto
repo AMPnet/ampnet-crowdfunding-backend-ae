@@ -34,6 +34,11 @@ message WithdrawInfoRequest {
     bool burned = 2;
 }
 
+message ResetPasswordRequest {
+    string email = 1;
+    string token = 2;
+}
+
 message Empty {
 }
 
@@ -44,4 +49,5 @@ service MailService {
     rpc SendWithdrawInfo(WithdrawInfoRequest) returns (Empty);
     rpc SendWithdrawRequest(WithdrawRequest) returns (Empty);
     rpc SendDepositInfo(DepositInfoRequest) returns (Empty);
+    rpc SendResetPassword(ResetPasswordRequest) returns (Empty);
 }

@@ -9,11 +9,16 @@ import com.ampnet.crowdfunding.proto.GenerateCreateOrganizationTxRequest
 import com.ampnet.crowdfunding.proto.GenerateCreateProjectTxRequest
 import com.ampnet.crowdfunding.proto.GenerateInvestTxRequest
 import com.ampnet.crowdfunding.proto.GenerateMintTxRequest
+import com.ampnet.crowdfunding.proto.PortfolioRequest
 import com.ampnet.crowdfunding.proto.PostTxRequest
+import com.ampnet.crowdfunding.proto.TransactionsRequest
+import com.ampnet.crowdfundingbackend.blockchain.pojo.BlockchainTransaction
 import com.ampnet.crowdfundingbackend.blockchain.pojo.ProjectInvestmentTxRequest
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
 import com.ampnet.crowdfundingbackend.exception.InternalException
 import com.ampnet.crowdfundingbackend.blockchain.pojo.GenerateProjectWalletRequest
+import com.ampnet.crowdfundingbackend.blockchain.pojo.Portfolio
+import com.ampnet.crowdfundingbackend.blockchain.pojo.PortfolioData
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -34,7 +39,7 @@ class BlockchainServiceImpl(
     }
 
     override fun getBalance(hash: String): Long {
-        logger.info { "Fetching balance for hash: $hash" }
+        logger.debug { "Fetching balance for hash: $hash" }
         try {
             val response = serviceBlockingStub.getBalance(
                 BalanceRequest.newBuilder()
@@ -100,7 +105,7 @@ class BlockchainServiceImpl(
     }
 
     override fun postTransaction(transaction: String): String {
-        logger.info { "Post transaction: $transaction" }
+        logger.info { "Post transaction" }
         try {
             val response = serviceBlockingStub.postTransaction(
                 PostTxRequest.newBuilder()
@@ -172,6 +177,35 @@ class BlockchainServiceImpl(
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not Burn toHash: $burnFromTxHash")
+        }
+    }
+
+    override fun getPortfolio(hash: String): Portfolio {
+        logger.debug { "Get user portfolio for wallet hash: $hash" }
+        try {
+            val response = serviceBlockingStub.getPortfolio(
+                PortfolioRequest.newBuilder()
+                    .setTxHash(hash)
+                    .build()
+            )
+            val portfolioData = response.portfolioList.map { PortfolioData(it) }
+            return Portfolio(portfolioData)
+        } catch (ex: StatusRuntimeException) {
+            throw getInternalExceptionFromStatusException(ex, "Could not get portfolio for wallet: $hash")
+        }
+    }
+
+    override fun getTransactions(hash: String): List<BlockchainTransaction> {
+        logger.debug { "Get transactions for wallet hash: $hash" }
+        try {
+            val response = serviceBlockingStub.getTransactions(
+                TransactionsRequest.newBuilder()
+                    .setTxHash(hash)
+                    .build()
+            )
+            return response.transactionsList.map { BlockchainTransaction(it) }
+        } catch (ex: StatusRuntimeException) {
+            throw getInternalExceptionFromStatusException(ex, "Could not get transactions for wallet: $hash")
         }
     }
 

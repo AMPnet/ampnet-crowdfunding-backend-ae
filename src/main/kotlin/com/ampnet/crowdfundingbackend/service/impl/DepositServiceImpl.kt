@@ -97,7 +97,7 @@ class DepositServiceImpl(
         val deposit = getDepositForId(request.depositId)
         validateDepositForMintTransaction(deposit)
         val amount = deposit.amount
-        val receivingWallet = getUserWalletHash(deposit)
+        val receivingWallet = ServiceUtils.getUserWalletHash(deposit.userUuid, walletRepository)
         val data = blockchainService.generateMintTransaction(receivingWallet, amount)
         val info = transactionInfoService.createMintTransaction(request, receivingWallet)
         return TransactionDataAndInfo(data, info)
@@ -129,15 +129,6 @@ class DepositServiceImpl(
             throw ResourceNotFoundException(ErrorCode.WALLET_DEPOSIT_MISSING,
                     "For mint transaction missing deposit: $depositId")
         }
-    }
-
-    private fun getUserWalletHash(deposit: Deposit): String {
-        val userWallet = walletRepository.findByUserUuid(deposit.userUuid).orElseThrow {
-            throw ResourceNotFoundException(ErrorCode.WALLET_MISSING,
-                    "User: ${deposit.userUuid} does not have a wallet")
-        }
-        return userWallet.wallet.hash
-            ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
     }
 
     private fun generateDepositReference(): String = (1..8)

@@ -1,7 +1,9 @@
 package com.ampnet.crowdfundingbackend.blockchain
 
+import com.ampnet.crowdfundingbackend.blockchain.pojo.BlockchainTransaction
 import com.ampnet.crowdfundingbackend.blockchain.pojo.ProjectInvestmentTxRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.GenerateProjectWalletRequest
+import com.ampnet.crowdfundingbackend.blockchain.pojo.Portfolio
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 
 interface BlockchainService {
@@ -14,4 +16,6 @@ interface BlockchainService {
     fun generateMintTransaction(toHash: String, amount: Long): TransactionData
     fun generateBurnTransaction(burnFromTxHash: String): TransactionData
     fun generateApproveBurnTransaction(burnFromTxHash: String, amount: Long): TransactionData
+    fun getPortfolio(hash: String): Portfolio
+    fun getTransactions(hash: String): List<BlockchainTransaction>
 }

@@ -66,6 +66,13 @@ class CloudStorageServiceTest {
     }
 
     @Test
+    fun getKeyForNameMustRemoveSpaces() {
+        val name = "test file   spaces.json"
+        val key = service.getKeyFromName(name)
+        assertThat(key).startsWith("test_file_spaces").endsWith(".json")
+    }
+
+    @Test
     fun getLink() {
         val key = "test-32423422.txt"
         val link = service.getFileLink(key)

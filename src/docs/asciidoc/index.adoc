@@ -480,3 +480,17 @@ Must have Admin role - privilege: PWA_DEPOSIT
 include::{snippets}/DepositControllerTest/mustBeAbleToGenerateMintTransaction/http-request.adoc[]
 .Response
 include::{snippets}/DepositControllerTest/mustBeAbleToGenerateMintTransaction/http-response.adoc[]
+
+== Portfolio API
+
+=== Get transactions with project
+.Request
+include::{snippets}/PortfolioControllerTest/mustBeAbleToGetMyPortfolio/http-request.adoc[]
+.Response
+include::{snippets}/PortfolioControllerTest/mustBeAbleToGetMyPortfolio/http-response.adoc[]
+
+=== Get stats
+.Request
+include::{snippets}/PortfolioControllerTest/mustBeAbleToGetMyPortfolioStats/http-request.adoc[]
+.Response
+include::{snippets}/PortfolioControllerTest/mustBeAbleToGetMyPortfolioStats/http-response.adoc[]

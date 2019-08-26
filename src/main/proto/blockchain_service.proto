@@ -64,6 +64,22 @@ message GenerateStartRevenueSharesPayoutTxRequest {
     string revenue = 3;
 }
 
+message GetProjectsInfoRequest {
+    repeated string project_tx_hashes = 1;
+}
+
+message GetProjectsInfoResponse {
+    message ProjectInfo {
+        string project_tx_hash = 1;
+        string total_funds_raised = 2;
+        string investment_cap = 3;
+        string min_per_user_investment = 4;
+        string max_per_user_investment = 5;
+        string ends_at = 6;
+    }
+    repeated ProjectInfo projects = 1;
+}
+
 
 ////////// Transaction messages //////////
 
@@ -71,12 +87,40 @@ message PostTxRequest {
     string data = 1;
 }
 
-message PostVaultTxRequest {
-    string data = 1;
-}
-
 message PostTxResponse {
     string tx_hash = 1;
+}
+
+message PortfolioRequest {
+    string tx_hash = 1;
+}
+
+message PortfolioResponse {
+    message Investment {
+        string project_tx_hash = 1;
+        string amount = 2;
+    }
+    repeated Investment portfolio = 1;
+}
+
+message TransactionsRequest {
+    string tx_hash = 1;
+}
+
+message TransactionsResponse {
+    message Transaction {
+        enum Type {
+            DEPOSIT = 0;
+            WITHDRAW = 1;
+            INVEST = 2;
+            SHARE_PAYOUT = 3;
+        }
+        string from_tx_hash = 1;
+        string to_tx_hash = 2;
+        string amount = 3;
+        Type type = 4;
+    }
+    repeated Transaction transactions = 1;
 }
 
 ///////// Contract create messages /////////
@@ -130,7 +174,7 @@ service BlockchainService {
     // Project
 
     rpc GenerateStartRevenueSharesPayoutTx(GenerateStartRevenueSharesPayoutTxRequest) returns (RawTxResponse);
-
+    rpc GetProjectsInfo(GetProjectsInfoRequest) returns (GetProjectsInfoResponse);
 
     // Contract create
 
@@ -141,5 +185,7 @@ service BlockchainService {
     // Transactions
 
     rpc PostTransaction(PostTxRequest) returns (PostTxResponse);
+    rpc GetPortfolio(PortfolioRequest) returns (PortfolioResponse);
+    rpc GetTransactions(TransactionsRequest) returns (TransactionsResponse);
 
 }
