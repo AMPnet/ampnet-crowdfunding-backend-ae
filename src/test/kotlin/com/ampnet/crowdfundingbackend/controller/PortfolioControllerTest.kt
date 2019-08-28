@@ -5,6 +5,7 @@ import com.ampnet.crowdfundingbackend.blockchain.pojo.BlockchainTransaction
 import com.ampnet.crowdfundingbackend.blockchain.pojo.Portfolio
 import com.ampnet.crowdfundingbackend.blockchain.pojo.PortfolioData
 import com.ampnet.crowdfundingbackend.controller.pojo.response.PortfolioResponse
+import com.ampnet.crowdfundingbackend.controller.pojo.response.ProjectWithInvestments
 import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.persistence.model.Wallet
 import com.ampnet.crowdfundingbackend.security.WithMockCrowdfoundUser
@@ -61,11 +62,11 @@ class PortfolioControllerTest : ControllerTestBase() {
             val portfolioResponse: PortfolioResponse = objectMapper.readValue(result.response.contentAsString)
             assertThat(portfolioResponse.portfolio).hasSize(2)
             val project = portfolioResponse.portfolio.first()
-            assertThat(project.projectResponse.id).isEqualTo(testContext.project.id)
+            assertThat(project.project.id).isEqualTo(testContext.project.id)
             assertThat(project.investment).isEqualTo(testContext.portfolio.data.first().amount)
 
             val secondProject = portfolioResponse.portfolio[1]
-            assertThat(secondProject.projectResponse.id).isEqualTo(testContext.secondProject.id)
+            assertThat(secondProject.project.id).isEqualTo(testContext.secondProject.id)
             assertThat(secondProject.investment).isEqualTo(testContext.portfolio.data[1].amount)
         }
     }
@@ -100,10 +101,61 @@ class PortfolioControllerTest : ControllerTestBase() {
         }
     }
 
+    @Test
+    @WithMockCrowdfoundUser
+    fun mustBeAbleToGetInvestmentsInProject() {
+        suppose("User has wallet") {
+            testContext.userWallet = createWalletForUser(userUuid, "user-wallet-hash")
+        }
+        suppose("Project has wallet") {
+            val organization = createOrganization("Port org", UUID.randomUUID())
+            testContext.project = createProject("Portfolio project", organization, UUID.randomUUID())
+            createWalletForProject(testContext.project, "project-wallet-hash")
+        }
+        suppose("Blockchain service will return investments in project") {
+            testContext.transactions = listOf(
+                createInvestmentInProject(10_000_00),
+                createInvestmentInProject(5000_00)
+            )
+            Mockito.`when`(
+                blockchainService.getInvestmentsInProject(
+                    getWalletHash(testContext.userWallet), getWalletHash(testContext.project.wallet))
+            ).thenReturn(testContext.transactions)
+        }
+
+        verify("User can get a list of investments in project") {
+            val result = mockMvc.perform(get("$portfolioPath/project/${testContext.project.id}"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val projectWithInvestments: ProjectWithInvestments = objectMapper.readValue(result.response.contentAsString)
+            assertThat(projectWithInvestments.project.id).isEqualTo(testContext.project.id)
+            assertThat(projectWithInvestments.transactions).hasSize(2)
+                .containsAll(testContext.transactions)
+        }
+    }
+
+    @Test
+    @WithMockCrowdfoundUser
+    fun mustGetNotFoundForInvestmentsInNonExistingProject() {
+        verify("Controller will return not found for non existing project") {
+            mockMvc.perform(get("$portfolioPath/project/0"))
+                .andExpect(status().isNotFound)
+        }
+    }
+
+    private fun createInvestmentInProject(amount: Long): BlockchainTransaction =
+        BlockchainTransaction(
+            getWalletHash(testContext.userWallet),
+            getWalletHash(testContext.project.wallet), amount,
+            TransactionsResponse.Transaction.Type.INVEST
+        )
+
     private class TestContext {
         lateinit var userWallet: Wallet
         lateinit var project: Project
         lateinit var secondProject: Project
         lateinit var portfolio: Portfolio
+        lateinit var transactions: List<BlockchainTransaction>
     }
 }

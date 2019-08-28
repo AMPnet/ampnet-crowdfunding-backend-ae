@@ -9,6 +9,7 @@ import com.ampnet.crowdfunding.proto.GenerateCreateOrganizationTxRequest
 import com.ampnet.crowdfunding.proto.GenerateCreateProjectTxRequest
 import com.ampnet.crowdfunding.proto.GenerateInvestTxRequest
 import com.ampnet.crowdfunding.proto.GenerateMintTxRequest
+import com.ampnet.crowdfunding.proto.InvestmentsInProjectRequest
 import com.ampnet.crowdfunding.proto.PortfolioRequest
 import com.ampnet.crowdfunding.proto.PostTxRequest
 import com.ampnet.crowdfunding.proto.TransactionsRequest
@@ -206,6 +207,25 @@ class BlockchainServiceImpl(
             return response.transactionsList.map { BlockchainTransaction(it) }
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not get transactions for wallet: $hash")
+        }
+    }
+
+    override fun getInvestmentsInProject(
+        userWalletHash: String,
+        projectWalletHash: String
+    ): List<BlockchainTransaction> {
+        logger.debug { "Get investments by user: $userWalletHash in project: $projectWalletHash" }
+        try {
+            val response = serviceBlockingStub.getInvestmentsInProject(
+                InvestmentsInProjectRequest.newBuilder()
+                    .setFromTxHash(userWalletHash)
+                    .setProjectTxHash(projectWalletHash)
+                    .build()
+            )
+            return response.transactionsList.map { BlockchainTransaction(it) }
+        } catch (ex: StatusRuntimeException) {
+            throw getInternalExceptionFromStatusException(ex,
+                "Could not get investments by user: $userWalletHash in project: $projectWalletHash")
         }
     }
 

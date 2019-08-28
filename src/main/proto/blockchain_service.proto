@@ -123,6 +123,11 @@ message TransactionsResponse {
     repeated Transaction transactions = 1;
 }
 
+message InvestmentsInProjectRequest {
+    string from_tx_hash = 1;
+    string project_tx_hash = 2;
+}
+
 ///////// Contract create messages /////////
 
 message GenerateCreateOrganizationTxRequest {
@@ -187,5 +192,6 @@ service BlockchainService {
     rpc PostTransaction(PostTxRequest) returns (PostTxResponse);
     rpc GetPortfolio(PortfolioRequest) returns (PortfolioResponse);
     rpc GetTransactions(TransactionsRequest) returns (TransactionsResponse);
+    rpc GetInvestmentsInProject(InvestmentsInProjectRequest) returns (TransactionsResponse);
 
 }
