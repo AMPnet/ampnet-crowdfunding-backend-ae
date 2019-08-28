@@ -119,6 +119,7 @@ message TransactionsResponse {
         string to_tx_hash = 2;
         string amount = 3;
         Type type = 4;
+        string date = 5;
     }
     repeated Transaction transactions = 1;
 }

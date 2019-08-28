@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class PortfolioControllerTest : ControllerTestBase() {
@@ -80,10 +81,14 @@ class PortfolioControllerTest : ControllerTestBase() {
         suppose("Blockchain service will return portfolio stats") {
             val walletHash = getWalletHash(testContext.userWallet)
             val transactions = listOf(
-                BlockchainTransaction(walletHash, "to", 1000, TransactionsResponse.Transaction.Type.INVEST),
-                BlockchainTransaction(walletHash, "to_2", 1000, TransactionsResponse.Transaction.Type.INVEST),
-                BlockchainTransaction("from", walletHash, 10, TransactionsResponse.Transaction.Type.SHARE_PAYOUT),
-                BlockchainTransaction("from_2", walletHash, 10, TransactionsResponse.Transaction.Type.SHARE_PAYOUT)
+                BlockchainTransaction(walletHash, "to", 1000,
+                    TransactionsResponse.Transaction.Type.INVEST, ZonedDateTime.now()),
+                BlockchainTransaction(walletHash, "to_2", 1000, TransactionsResponse.Transaction.Type.INVEST,
+                    ZonedDateTime.now()),
+                BlockchainTransaction("from", walletHash, 10, TransactionsResponse.Transaction.Type.SHARE_PAYOUT,
+                    ZonedDateTime.now()),
+                BlockchainTransaction("from_2", walletHash, 10, TransactionsResponse.Transaction.Type.SHARE_PAYOUT,
+                    ZonedDateTime.now())
             )
             Mockito.`when`(
                 blockchainService.getTransactions(getWalletHash(testContext.userWallet))
@@ -130,8 +135,8 @@ class PortfolioControllerTest : ControllerTestBase() {
 
             val projectWithInvestments: ProjectWithInvestments = objectMapper.readValue(result.response.contentAsString)
             assertThat(projectWithInvestments.project.id).isEqualTo(testContext.project.id)
-            assertThat(projectWithInvestments.transactions).hasSize(2)
-                .containsAll(testContext.transactions)
+            assertThat(projectWithInvestments.transactions.map { it.amount }).hasSize(2)
+                .containsAll(testContext.transactions.map { it.amount })
         }
     }
 
@@ -148,7 +153,8 @@ class PortfolioControllerTest : ControllerTestBase() {
         BlockchainTransaction(
             getWalletHash(testContext.userWallet),
             getWalletHash(testContext.project.wallet), amount,
-            TransactionsResponse.Transaction.Type.INVEST
+            TransactionsResponse.Transaction.Type.INVEST,
+            ZonedDateTime.now()
         )
 
     private class TestContext {
