@@ -188,6 +188,7 @@ class BlockchainServiceImpl(
                     .setTxHash(hash)
                     .build()
             )
+            logger.debug { "Get user portfolio response: $response" }
             val portfolioData = response.portfolioList.map { PortfolioData(it) }
             return Portfolio(portfolioData)
         } catch (ex: StatusRuntimeException) {

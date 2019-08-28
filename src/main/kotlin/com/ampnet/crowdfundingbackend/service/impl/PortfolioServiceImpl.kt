@@ -23,11 +23,15 @@ class PortfolioServiceImpl(
     override fun getPortfolio(user: UUID): List<ProjectWithInvestment> {
         val userWallet = ServiceUtils.getUserWalletHash(user, userWalletRepository)
         val portfolio = blockchainService.getPortfolio(userWallet).data.associateBy { it.projectTxHash }
-        val projects = projectRepository.findByWalletHashes(portfolio.keys)
-        return projects.mapNotNull { project ->
-            portfolio[project.wallet?.hash]?.let { it ->
-                ProjectWithInvestment(project, it.amount)
+        return if (portfolio.isNotEmpty()) {
+            val projects = projectRepository.findByWalletHashes(portfolio.keys)
+            projects.mapNotNull { project ->
+                portfolio[project.wallet?.hash]?.let { it ->
+                    ProjectWithInvestment(project, it.amount)
+                }
             }
+        } else {
+            emptyList()
         }
     }
 
