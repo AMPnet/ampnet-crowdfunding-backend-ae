@@ -18,4 +18,5 @@ interface BlockchainService {
     fun generateApproveBurnTransaction(burnFromTxHash: String, amount: Long): TransactionData
     fun getPortfolio(hash: String): Portfolio
     fun getTransactions(hash: String): List<BlockchainTransaction>
+    fun getInvestmentsInProject(userWalletHash: String, projectWalletHash: String): List<BlockchainTransaction>
 }

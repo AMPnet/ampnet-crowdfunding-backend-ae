@@ -3,6 +3,7 @@ package com.ampnet.crowdfundingbackend.service.impl
 import com.ampnet.crowdfunding.proto.TransactionsResponse
 import com.ampnet.crowdfundingbackend.blockchain.BlockchainService
 import com.ampnet.crowdfundingbackend.blockchain.pojo.BlockchainTransaction
+import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.persistence.repository.ProjectRepository
 import com.ampnet.crowdfundingbackend.persistence.repository.UserWalletRepository
 import com.ampnet.crowdfundingbackend.service.PortfolioService
@@ -42,6 +43,13 @@ class PortfolioServiceImpl(
         val investments = sumTransactionForType(transactions, TransactionsResponse.Transaction.Type.INVEST)
         val earnings = sumTransactionForType(transactions, TransactionsResponse.Transaction.Type.SHARE_PAYOUT)
         return PortfolioStats(investments, earnings)
+    }
+
+    @Transactional(readOnly = true)
+    override fun getInvestmentsInProject(user: UUID, project: Project): List<BlockchainTransaction> {
+        val userWalletHash = ServiceUtils.getUserWalletHash(user, userWalletRepository)
+        val projectWalletHash = ServiceUtils.getProjectWalletHash(project)
+        return blockchainService.getInvestmentsInProject(userWalletHash, projectWalletHash)
     }
 
     private fun sumTransactionForType(

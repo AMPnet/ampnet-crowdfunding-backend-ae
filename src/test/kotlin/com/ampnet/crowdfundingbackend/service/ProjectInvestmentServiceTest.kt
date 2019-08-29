@@ -8,7 +8,6 @@ import com.ampnet.crowdfundingbackend.persistence.model.Organization
 import com.ampnet.crowdfundingbackend.persistence.model.Project
 import com.ampnet.crowdfundingbackend.service.impl.ProjectInvestmentServiceImpl
 import com.ampnet.crowdfundingbackend.service.impl.TransactionInfoServiceImpl
-import com.ampnet.crowdfundingbackend.service.impl.WalletServiceImpl
 import com.ampnet.crowdfundingbackend.service.pojo.ProjectInvestmentRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 import org.assertj.core.api.Assertions.assertThat
@@ -22,9 +21,7 @@ class ProjectInvestmentServiceTest : JpaServiceTestBase() {
 
     private val projectInvestmentService: ProjectInvestmentService by lazy {
         val transactionService = TransactionInfoServiceImpl(transactionInfoRepository)
-        val walletService = WalletServiceImpl(walletRepository, projectRepository, organizationRepository,
-                userWalletRepository, mockedBlockchainService, transactionService, pairWalletCodeRepository)
-        ProjectInvestmentServiceImpl(walletService, mockedBlockchainService, transactionService)
+        ProjectInvestmentServiceImpl(mockedBlockchainService, transactionService, userWalletRepository)
     }
     private val organization: Organization by lazy {
         databaseCleanerService.deleteAllOrganizations()

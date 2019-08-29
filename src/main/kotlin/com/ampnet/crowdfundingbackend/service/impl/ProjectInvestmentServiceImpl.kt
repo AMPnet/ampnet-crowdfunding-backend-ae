@@ -6,22 +6,20 @@ import com.ampnet.crowdfundingbackend.exception.ErrorCode
 import com.ampnet.crowdfundingbackend.exception.InvalidRequestException
 import com.ampnet.crowdfundingbackend.exception.ResourceNotFoundException
 import com.ampnet.crowdfundingbackend.persistence.model.Project
-import com.ampnet.crowdfundingbackend.persistence.model.Wallet
 import com.ampnet.crowdfundingbackend.service.ProjectInvestmentService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
-import com.ampnet.crowdfundingbackend.service.WalletService
 import com.ampnet.crowdfundingbackend.service.pojo.ProjectInvestmentRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
+import com.ampnet.crowdfundingbackend.persistence.repository.UserWalletRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 import java.time.ZonedDateTime
 
 @Service
 class ProjectInvestmentServiceImpl(
-    private val walletService: WalletService,
     private val blockchainService: BlockchainService,
-    private val transactionInfoService: TransactionInfoService
+    private val transactionInfoService: TransactionInfoService,
+    private val userWalletRepository: UserWalletRepository
 ) : ProjectInvestmentService {
 
     @Transactional
@@ -30,14 +28,12 @@ class ProjectInvestmentServiceImpl(
         verifyProjectIsStillActive(request.project)
         verifyInvestmentAmountIsValid(request.project, request.amount)
 
-        val userWallet = getUserWallet(request.investorUuid)
-        verifyUserHasEnoughFunds(userWallet, request.amount)
+        val userWalletHash = ServiceUtils.getUserWalletHash(request.investorUuid, userWalletRepository)
+        verifyUserHasEnoughFunds(userWalletHash, request.amount)
 
-        val projectWallet = getProjectWallet(request.project)
-        verifyProjectDidNotReachExpectedInvestment(projectWallet, request.project.expectedFunding)
+        val projectWalletHash = ServiceUtils.getProjectWalletHash(request.project)
+        verifyProjectDidNotReachExpectedInvestment(projectWalletHash, request.project.expectedFunding)
 
-        val userWalletHash = getWalletHash(userWallet)
-        val projectWalletHash = getWalletHash(projectWallet)
         val investRequest = ProjectInvestmentTxRequest(userWalletHash, projectWalletHash, request.amount)
         val data = blockchainService.generateProjectInvestmentTransaction(investRequest)
         val info = transactionInfoService.createInvestTransaction(
@@ -67,27 +63,18 @@ class ProjectInvestmentServiceImpl(
         }
     }
 
-    private fun verifyUserHasEnoughFunds(wallet: Wallet, amount: Long) {
-        val funds = walletService.getWalletBalance(wallet)
+    private fun verifyUserHasEnoughFunds(hash: String, amount: Long) {
+        val funds = blockchainService.getBalance(hash)
         if (funds < amount) {
             throw InvalidRequestException(ErrorCode.WALLET_FUNDS, "User does not have enough funds on wallet")
         }
     }
 
-    private fun verifyProjectDidNotReachExpectedInvestment(wallet: Wallet, expectedFunding: Long) {
-        val currentFunds = walletService.getWalletBalance(wallet)
+    private fun verifyProjectDidNotReachExpectedInvestment(hash: String, expectedFunding: Long) {
+        val currentFunds = blockchainService.getBalance(hash)
         if (currentFunds == expectedFunding) {
             throw InvalidRequestException(
                     ErrorCode.PRJ_MAX_FUNDS, "Project has reached expected funding: $currentFunds")
         }
     }
-
-    private fun getUserWallet(userUuid: UUID) = walletService.getUserWallet(userUuid)
-        ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "User does not have the wallet")
-
-    private fun getProjectWallet(project: Project) = project.wallet
-        ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "Project does not have the wallet")
-
-    private fun getWalletHash(wallet: Wallet) = wallet.hash
-        ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Not activated")
 }

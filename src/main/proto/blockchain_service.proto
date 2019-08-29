@@ -107,6 +107,11 @@ message TransactionsRequest {
     string tx_hash = 1;
 }
 
+message InvestmentsInProjectRequest {
+    string from_tx_hash = 1;
+    string project_tx_hash = 2;
+}
+
 message TransactionsResponse {
     message Transaction {
         enum Type {
@@ -118,7 +123,8 @@ message TransactionsResponse {
         string from_tx_hash = 1;
         string to_tx_hash = 2;
         string amount = 3;
-        Type type = 4;
+        string date = 4;
+        Type type = 5;
     }
     repeated Transaction transactions = 1;
 }
@@ -187,5 +193,6 @@ service BlockchainService {
     rpc PostTransaction(PostTxRequest) returns (PostTxResponse);
     rpc GetPortfolio(PortfolioRequest) returns (PortfolioResponse);
     rpc GetTransactions(TransactionsRequest) returns (TransactionsResponse);
+    rpc GetInvestmentsInProject(InvestmentsInProjectRequest) returns (TransactionsResponse);
 
 }

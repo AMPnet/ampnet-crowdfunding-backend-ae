@@ -219,7 +219,7 @@ class WalletControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val transactionResponse: TransactionResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(transactionResponse.tx).isEqualTo(testData.transactionData)
+            assertThat(transactionResponse.tx).isEqualTo(testData.transactionData.tx)
             assertThat(transactionResponse.txId).isNotNull()
             assertThat(transactionResponse.info.txType).isEqualTo(TransactionType.CREATE_PROJECT)
         }
@@ -332,7 +332,7 @@ class WalletControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val transactionResponse: TransactionResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(transactionResponse.tx).isEqualTo(testData.transactionData)
+            assertThat(transactionResponse.tx).isEqualTo(testData.transactionData.tx)
             assertThat(transactionResponse.txId).isNotNull()
             assertThat(transactionResponse.info.txType).isEqualTo(TransactionType.CREATE_ORG)
         }
