@@ -51,6 +51,8 @@ class OrganizationServiceImpl(
         val savedOrganization = organizationRepository.save(organization)
         addUserToOrganization(serviceRequest.ownerUuid, organization.id, OrganizationRoleType.ORG_ADMIN)
 
+        logger.info { "Created organization: ${organization.name}" }
+
         return savedOrganization
     }
 
@@ -92,6 +94,7 @@ class OrganizationServiceImpl(
             throw ResourceAlreadyExistsException(ErrorCode.ORG_DUPLICATE_USER,
                     "User ${it.userUuid} is already a member of this organization ${it.organizationId}")
         }
+        logger.debug { "Adding user: $userUuid to organization: $organizationId" }
 
         val membership = OrganizationMembership::class.java.getConstructor().newInstance()
         membership.organizationId = organizationId
@@ -104,6 +107,7 @@ class OrganizationServiceImpl(
     @Transactional
     override fun removeUserFromOrganization(userUuid: UUID, organizationId: Int) {
         membershipRepository.findByOrganizationIdAndUserUuid(organizationId, userUuid).ifPresent {
+            logger.debug { "Removing user: $userUuid from organization: $organizationId" }
             membershipRepository.delete(it)
         }
     }
@@ -137,6 +141,7 @@ class OrganizationServiceImpl(
         documents += document
         organization.documents = documents
         organizationRepository.save(organization)
+        logger.debug { "Add document: ${document.name} to organization: ${organization.id}" }
     }
 
     private fun getRole(role: OrganizationRoleType): Role {

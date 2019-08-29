@@ -75,7 +75,7 @@ class MailServiceImpl(
     private fun createSteamObserver(message: String) =
         object : StreamObserver<Empty> {
             override fun onNext(value: Empty?) {
-                logger.debug { "Successfully sent $message" }
+                logger.info { "Successfully sent $message" }
             }
 
             override fun onError(t: Throwable?) {

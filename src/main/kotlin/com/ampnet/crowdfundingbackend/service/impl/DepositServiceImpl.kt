@@ -15,6 +15,7 @@ import com.ampnet.crowdfundingbackend.service.StorageService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.pojo.ApproveDepositRequest
 import com.ampnet.crowdfundingbackend.service.pojo.MintServiceRequest
+import mu.KLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -29,6 +30,8 @@ class DepositServiceImpl(
     private val storageService: StorageService,
     private val mailService: MailService
 ) : DepositService {
+
+    companion object : KLogging()
 
     private val charPool: List<Char> = ('A'..'Z') + ('0'..'9')
 
@@ -48,6 +51,7 @@ class DepositServiceImpl(
         )
         depositRepository.save(deposit)
         mailService.sendDepositRequest(user, amount)
+        logger.debug { "Created Deposit for user: $user with amount: $amount" }
         return deposit
     }
 
@@ -57,8 +61,9 @@ class DepositServiceImpl(
         if (deposit.txHash != null) {
             throw InvalidRequestException(ErrorCode.WALLET_DEPOSIT_MINTED, "Cannot delete minted deposit")
         }
-        mailService.sendDepositInfo(deposit.userUuid, false)
+        logger.info { "Deleting deposit: $deposit" }
         depositRepository.delete(deposit)
+        mailService.sendDepositInfo(deposit.userUuid, false)
     }
 
     @Transactional
@@ -68,6 +73,7 @@ class DepositServiceImpl(
         }
         // TODO: think about document reading restrictions
         val document = storageService.saveDocument(request.documentSaveRequest)
+        logger.info { "Approving deposit with id: ${request.id} by user: ${request.user}" }
 
         deposit.approved = true
         deposit.approvedByUserUuid = request.user

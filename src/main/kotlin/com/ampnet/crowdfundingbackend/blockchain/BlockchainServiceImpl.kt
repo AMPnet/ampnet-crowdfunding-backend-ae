@@ -71,13 +71,14 @@ class BlockchainServiceImpl(
     }
 
     override fun generateCreateOrganizationTransaction(userWalletHash: String): TransactionData {
-        logger.info { "Generating create organization: $userWalletHash" }
+        logger.info { "Generating create organization wallet: $userWalletHash" }
         try {
             val response = serviceBlockingStub.generateCreateOrganizationTx(
                 GenerateCreateOrganizationTxRequest.newBuilder()
                     .setFromTxHash(userWalletHash)
                     .build()
             )
+            logger.info { "Successfully created organization wallet" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex,
@@ -86,7 +87,7 @@ class BlockchainServiceImpl(
     }
 
     override fun generateProjectWalletTransaction(request: GenerateProjectWalletRequest): TransactionData {
-        logger.info { "Generating create Project transaction" }
+        logger.info { "Generating create project wallet transaction" }
         try {
             val endTimeInMilliSeconds = request.endDate.toInstant().toEpochMilli()
             val response = serviceBlockingStub.generateCreateProjectTx(
@@ -99,6 +100,7 @@ class BlockchainServiceImpl(
                     .setEndInvestmentTime(endTimeInMilliSeconds.toString())
                     .build()
             )
+            logger.info { "Successfully created project wallet" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not generate create Project transaction: $request")
@@ -106,13 +108,14 @@ class BlockchainServiceImpl(
     }
 
     override fun postTransaction(transaction: String): String {
-        logger.info { "Post transaction" }
+        logger.info { "Posting transaction" }
         try {
             val response = serviceBlockingStub.postTransaction(
                 PostTxRequest.newBuilder()
                     .setData(transaction)
                     .build()
             )
+            logger.info { "Successfully posted transaction: ${response.txHash}" }
             return response.txHash
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not post transaction: $transaction")
@@ -130,6 +133,7 @@ class BlockchainServiceImpl(
                     .setAmount(request.amount.toString())
                     .build()
             )
+            logger.info { "Successfully generated investment transaction" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(
@@ -138,7 +142,7 @@ class BlockchainServiceImpl(
     }
 
     override fun generateMintTransaction(toHash: String, amount: Long): TransactionData {
-        logger.warn { "Generating Mint transaction toHash: $toHash with amount = $amount" }
+        logger.info { "Generating Mint transaction toHash: $toHash with amount = $amount" }
         try {
             val response = serviceBlockingStub.generateMintTx(
                 GenerateMintTxRequest.newBuilder()
@@ -146,6 +150,7 @@ class BlockchainServiceImpl(
                     .setAmount(amount.toString())
                     .build()
             )
+            logger.info { "Successfully generated mint transaction" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not Mint toHash: $toHash")
@@ -153,13 +158,14 @@ class BlockchainServiceImpl(
     }
 
     override fun generateBurnTransaction(burnFromTxHash: String): TransactionData {
-        logger.warn { "Generating Burn transaction burnFromTxHash: $burnFromTxHash" }
+        logger.info { "Generating Burn transaction burnFromTxHash: $burnFromTxHash" }
         try {
             val response = serviceBlockingStub.generateBurnFromTx(
                 GenerateBurnFromTxRequest.newBuilder()
                     .setBurnFromTxHash(burnFromTxHash)
                     .build()
             )
+            logger.info { "Successfully generated burn transaction" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not Burn toHash: $burnFromTxHash")
@@ -175,6 +181,7 @@ class BlockchainServiceImpl(
                     .setAmount(amount.toString())
                     .build()
             )
+            logger.info { "Successfully generated approve burn transaction" }
             return TransactionData(response)
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not Burn toHash: $burnFromTxHash")
@@ -189,7 +196,7 @@ class BlockchainServiceImpl(
                     .setTxHash(hash)
                     .build()
             )
-            logger.debug { "Get user portfolio response: $response" }
+            logger.debug { "User portfolio response: $response" }
             val portfolioData = response.portfolioList.map { PortfolioData(it) }
             return Portfolio(portfolioData)
         } catch (ex: StatusRuntimeException) {
@@ -205,6 +212,7 @@ class BlockchainServiceImpl(
                     .setTxHash(hash)
                     .build()
             )
+            logger.debug { "Transactions response: $response" }
             return response.transactionsList.map { BlockchainTransaction(it) }
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not get transactions for wallet: $hash")
@@ -223,6 +231,7 @@ class BlockchainServiceImpl(
                     .setProjectTxHash(projectWalletHash)
                     .build()
             )
+            logger.debug { "Investments in project response: $response" }
             return response.transactionsList.map { BlockchainTransaction(it) }
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex,

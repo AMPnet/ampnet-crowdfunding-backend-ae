@@ -18,6 +18,7 @@ class WebSocketNotificationServiceImpl(
         logger.debug { "Sending WebSocket notification: $response" }
         try {
             messagingTemplate.convertAndSend("/tx_status/$txId", response)
+            logger.debug { "Successfully sent WebSocket notification: $response" }
         } catch (ex: MessagingException) {
             logger.warn(ex) { "Failed to send WebSocket notification: $response" }
         }

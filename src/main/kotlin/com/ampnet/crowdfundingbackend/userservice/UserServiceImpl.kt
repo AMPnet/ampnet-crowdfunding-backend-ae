@@ -29,7 +29,9 @@ class UserServiceImpl(
             val request = GetUsersRequest.newBuilder()
                 .addAllUuids(uuids.map { it.toString() })
                 .build()
-            return serviceBlockingStub.getUsers(request).usersList
+            val response = serviceBlockingStub.getUsers(request).usersList
+            logger.debug { "Fetched users: $response" }
+            return response
         } catch (ex: StatusRuntimeException) {
             throw GrpcException(ErrorCode.INT_GRPC_USER, "Failed to fetch users. ${ex.localizedMessage}")
         }

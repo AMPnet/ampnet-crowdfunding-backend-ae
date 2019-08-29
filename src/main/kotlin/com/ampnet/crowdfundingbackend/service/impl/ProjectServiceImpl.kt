@@ -35,6 +35,7 @@ class ProjectServiceImpl(
                             "Organization: ${request.organization.id}")
         }
 
+        logger.debug { "Creating project: ${request.name}" }
         val project = createProjectFromRequest(request)
         project.createdAt = ZonedDateTime.now()
         return projectRepository.save(project)

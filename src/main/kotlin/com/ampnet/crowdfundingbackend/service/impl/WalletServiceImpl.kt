@@ -21,6 +21,7 @@ import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
 import com.ampnet.crowdfundingbackend.exception.GrpcException
 import com.ampnet.crowdfundingbackend.persistence.model.PairWalletCode
 import com.ampnet.crowdfundingbackend.persistence.repository.PairWalletCodeRepository
+import mu.KLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -36,6 +37,8 @@ class WalletServiceImpl(
     private val transactionInfoService: TransactionInfoService,
     private val pairWalletCodeRepository: PairWalletCodeRepository
 ) : WalletService {
+
+    companion object : KLogging()
 
     private val charPool: List<Char> = ('A'..'Z') + ('0'..'9')
 
@@ -62,6 +65,7 @@ class WalletServiceImpl(
             pairWalletCodeRepository.delete(it)
         }
 
+        logger.debug { "Creating wallet: $publicKey for user: $userUuid" }
         val wallet = createWallet(publicKey, WalletType.USER)
         val userWallet = UserWallet(0, userUuid, wallet)
         userWalletRepository.save(userWallet)
@@ -76,6 +80,7 @@ class WalletServiceImpl(
         val organizationWalletHash = project.organization.wallet?.hash
             ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "Organization wallet is missing")
 
+        logger.debug { "Generating create wallet transaction for project: ${project.id}" }
         val request = GenerateProjectWalletRequest(project, organizationWalletHash, userWalletHash)
         val data = blockchainService.generateProjectWalletTransaction(request)
         val info = transactionInfoService.createProjectTransaction(project, userUuid)
@@ -86,10 +91,12 @@ class WalletServiceImpl(
     @Throws(ResourceAlreadyExistsException::class)
     override fun createProjectWallet(project: Project, signedTransaction: String): Wallet {
         throwExceptionIfProjectHasWallet(project)
+        logger.debug { "Creating wallet for project: ${project.id}" }
         val txHash = blockchainService.postTransaction(signedTransaction)
         val wallet = createWallet(txHash, WalletType.PROJECT)
         project.wallet = wallet
         projectRepository.save(project)
+        logger.debug { "Created wallet for project: ${project.id}" }
         return wallet
     }
 
@@ -102,6 +109,7 @@ class WalletServiceImpl(
         val walletHash = getUserWallet(userUuid)?.hash
             ?: throw ResourceNotFoundException(ErrorCode.WALLET_MISSING, "User wallet is missing")
 
+        logger.debug { "Generating create wallet transaction for organization: ${organization.id}" }
         val data = blockchainService.generateCreateOrganizationTransaction(walletHash)
         val info = transactionInfoService.createOrgTransaction(organization, userUuid)
         return TransactionDataAndInfo(data, info)
@@ -110,10 +118,12 @@ class WalletServiceImpl(
     @Transactional
     override fun createOrganizationWallet(organization: Organization, signedTransaction: String): Wallet {
         throwExceptionIfOrganizationAlreadyHasWallet(organization)
+        logger.debug { "Creating wallet for organization: ${organization.id}" }
         val txHash = blockchainService.postTransaction(signedTransaction)
         val wallet = createWallet(txHash, WalletType.ORG)
         organization.wallet = wallet
         organizationRepository.save(organization)
+        logger.debug { "Created wallet for organization: ${organization.id}" }
         return wallet
     }
 

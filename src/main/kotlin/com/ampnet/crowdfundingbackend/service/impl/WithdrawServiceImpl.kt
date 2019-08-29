@@ -14,6 +14,7 @@ import com.ampnet.crowdfundingbackend.service.StorageService
 import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.WithdrawService
 import com.ampnet.crowdfundingbackend.service.pojo.DocumentSaveRequest
+import mu.KLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -28,6 +29,8 @@ class WithdrawServiceImpl(
     private val storageService: StorageService,
     private val mailService: MailService
 ) : WithdrawService {
+
+    companion object : KLogging()
 
     @Transactional(readOnly = true)
     override fun getPendingForUser(user: UUID): Withdraw? {
@@ -52,6 +55,7 @@ class WithdrawServiceImpl(
                 null, null, null, null, null, null)
         withdrawRepository.save(withdraw)
         mailService.sendWithdrawRequest(user, amount)
+        logger.debug { "Created Withdraw for user: $user with amount: $amount" }
         return withdraw
     }
 
@@ -61,6 +65,7 @@ class WithdrawServiceImpl(
         if (withdraw.burnedTxHash != null) {
             throw InvalidRequestException(ErrorCode.WALLET_WITHDRAW_BURNED, "Cannot delete burned Withdraw")
         }
+        logger.info { "Deleting Withdraw with id: $withdraw" }
         withdrawRepository.delete(withdraw)
         mailService.sendWithdrawInfo(withdraw.userUuid, false)
     }
@@ -82,9 +87,11 @@ class WithdrawServiceImpl(
     override fun confirmApproval(signedTransaction: String, withdrawId: Int): Withdraw {
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForApproval(withdraw)
+        logger.info { "Approving Withdraw: $withdraw" }
         val approvalTxHash = blockchainService.postTransaction(signedTransaction)
         withdraw.approvedTxHash = approvalTxHash
         withdraw.approvedAt = ZonedDateTime.now()
+        logger.info { "Approved Withdraw: $withdraw" }
         return withdrawRepository.save(withdraw)
     }
 
@@ -104,10 +111,12 @@ class WithdrawServiceImpl(
     override fun burn(signedTransaction: String, withdrawId: Int): Withdraw {
         val withdraw = getWithdraw(withdrawId)
         validateWithdrawForBurn(withdraw)
+        logger.info { "Burning Withdraw: $withdraw" }
         val burnedTxHash = blockchainService.postTransaction(signedTransaction)
         withdraw.burnedTxHash = burnedTxHash
         withdraw.burnedAt = ZonedDateTime.now()
         withdrawRepository.save(withdraw)
+        logger.info { "Burned Withdraw: $withdraw" }
         mailService.sendWithdrawInfo(withdraw.userUuid, true)
         return withdraw
     }

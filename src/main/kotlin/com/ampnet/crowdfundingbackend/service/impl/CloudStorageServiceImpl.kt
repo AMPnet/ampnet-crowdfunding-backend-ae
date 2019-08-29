@@ -46,6 +46,7 @@ class CloudStorageServiceImpl(applicationProperties: ApplicationProperties) : Cl
                     PutObjectRequest.builder().acl(acl).bucket(bucketName).key("$folder/$key").build(),
                     RequestBody.fromBytes(content)
             )
+            logger.info { "Saved file: $key" }
             return getFileLink(key)
         } catch (ex: S3Exception) {
             logger.warn { ex.message }
@@ -59,6 +60,7 @@ class CloudStorageServiceImpl(applicationProperties: ApplicationProperties) : Cl
         val key = getKeyFromLink(link)
         try {
             s3client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())
+            logger.info { "Deleted file: $key" }
         } catch (ex: S3Exception) {
             logger.warn { ex.message }
             throw InternalException(ErrorCode.INT_FILE_STORAGE, "Could not delete file with key: $key on cloud")

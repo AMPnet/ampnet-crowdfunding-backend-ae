@@ -54,6 +54,8 @@ class OrganizationInviteServiceImpl(
         organizationInvite.invitedByUserUuid = request.invitedByUserUuid
         organizationInvite.createdAt = ZonedDateTime.now()
 
+        logger.debug { "User: ${request.email} invited to organization: ${request.organizationId}" }
+
         val savedInvite = inviteRepository.save(organizationInvite)
         sendMailInvitationToJoinOrganization(request.email, invitedToOrganization)
         return savedInvite
@@ -62,6 +64,7 @@ class OrganizationInviteServiceImpl(
     @Transactional
     override fun revokeInvitation(organizationId: Int, email: String) {
         inviteRepository.findByOrganizationIdAndEmail(organizationId, email).ifPresent {
+            logger.debug { "Revoked user: $email invitation to organization: $organizationId" }
             inviteRepository.delete(it)
         }
     }
@@ -77,10 +80,12 @@ class OrganizationInviteServiceImpl(
             if (request.join) {
                 val role = OrganizationRoleType.fromInt(it.role.id)
                         ?: throw ResourceNotFoundException(ErrorCode.USER_ROLE_MISSING,
-                                "Missing role wiht id: ${it.role.id}")
+                                "Missing role with id: ${it.role.id}")
                 organizationService.addUserToOrganization(request.userUuid, it.organizationId, role)
             }
             inviteRepository.delete(it)
+            logger.debug { "User: ${request.userUuid} answer = ${request.join} " +
+                "to join organization: ${request.organizationId}" }
         }
     }
 

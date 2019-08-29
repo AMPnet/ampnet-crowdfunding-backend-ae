@@ -11,6 +11,7 @@ import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.pojo.ProjectInvestmentRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
 import com.ampnet.crowdfundingbackend.persistence.repository.UserWalletRepository
+import mu.KLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -22,9 +23,12 @@ class ProjectInvestmentServiceImpl(
     private val userWalletRepository: UserWalletRepository
 ) : ProjectInvestmentService {
 
+    companion object : KLogging()
+
     @Transactional
     @Throws(InvalidRequestException::class, ResourceNotFoundException::class)
     override fun generateInvestInProjectTransaction(request: ProjectInvestmentRequest): TransactionDataAndInfo {
+        logger.debug { "Generating Investment in project for request: $request" }
         verifyProjectIsStillActive(request.project)
         verifyInvestmentAmountIsValid(request.project, request.amount)
 
@@ -38,6 +42,7 @@ class ProjectInvestmentServiceImpl(
         val data = blockchainService.generateProjectInvestmentTransaction(investRequest)
         val info = transactionInfoService.createInvestTransaction(
                 request.project.name, request.amount, request.investorUuid)
+        logger.debug { "Generated Investment in project for request: $request" }
         return TransactionDataAndInfo(data, info)
     }
 
