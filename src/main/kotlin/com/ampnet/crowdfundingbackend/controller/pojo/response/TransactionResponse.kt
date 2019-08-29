@@ -3,7 +3,6 @@ package com.ampnet.crowdfundingbackend.controller.pojo.response
 import com.ampnet.crowdfundingbackend.enums.TransactionType
 import com.ampnet.crowdfundingbackend.persistence.model.TransactionInfo
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
-import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
 
 data class TransactionResponse(
     val tx: String,
