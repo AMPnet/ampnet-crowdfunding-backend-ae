@@ -348,7 +348,7 @@ class DepositControllerTest : ControllerTestBase() {
                     .andReturn()
 
             val transactionResponse: TransactionResponse = objectMapper.readValue(result.response.contentAsString)
-            assertThat(transactionResponse.tx).isEqualTo(testContext.transactionData)
+            assertThat(transactionResponse.tx).isEqualTo(testContext.transactionData.tx)
             assertThat(transactionResponse.txId).isNotNull()
             assertThat(transactionResponse.info.txType).isEqualTo(TransactionType.MINT)
         }
