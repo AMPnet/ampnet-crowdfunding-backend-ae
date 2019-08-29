@@ -4,7 +4,6 @@ import com.ampnet.crowdfundingbackend.blockchain.BlockchainService
 import com.ampnet.crowdfundingbackend.enums.Currency
 import com.ampnet.crowdfundingbackend.enums.WalletType
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
-import com.ampnet.crowdfundingbackend.exception.InternalException
 import com.ampnet.crowdfundingbackend.exception.ResourceAlreadyExistsException
 import com.ampnet.crowdfundingbackend.exception.ResourceNotFoundException
 import com.ampnet.crowdfundingbackend.persistence.model.Organization
@@ -19,6 +18,7 @@ import com.ampnet.crowdfundingbackend.service.TransactionInfoService
 import com.ampnet.crowdfundingbackend.service.WalletService
 import com.ampnet.crowdfundingbackend.blockchain.pojo.GenerateProjectWalletRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionDataAndInfo
+import com.ampnet.crowdfundingbackend.exception.GrpcException
 import com.ampnet.crowdfundingbackend.persistence.model.PairWalletCode
 import com.ampnet.crowdfundingbackend.persistence.repository.PairWalletCodeRepository
 import org.springframework.stereotype.Service
@@ -40,7 +40,7 @@ class WalletServiceImpl(
     private val charPool: List<Char> = ('A'..'Z') + ('0'..'9')
 
     @Transactional(readOnly = true)
-    @Throws(InternalException::class)
+    @Throws(GrpcException::class)
     override fun getWalletBalance(wallet: Wallet): Long {
         val walletHash = wallet.hash
             ?: throw ResourceNotFoundException(ErrorCode.WALLET_NOT_ACTIVATED, "Wallet not activated")
@@ -53,7 +53,7 @@ class WalletServiceImpl(
     }
 
     @Transactional
-    @Throws(ResourceAlreadyExistsException::class, InternalException::class)
+    @Throws(ResourceAlreadyExistsException::class)
     override fun createUserWallet(userUuid: UUID, publicKey: String): Wallet {
         userWalletRepository.findByUserUuid(userUuid).ifPresent {
             throw ResourceAlreadyExistsException(ErrorCode.WALLET_EXISTS, "User: $userUuid already has a wallet.")

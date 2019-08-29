@@ -1,8 +1,11 @@
 package com.ampnet.crowdfundingbackend.userservice
 
+import com.ampnet.crowdfundingbackend.exception.ErrorCode
+import com.ampnet.crowdfundingbackend.exception.GrpcException
 import com.ampnet.userservice.proto.GetUsersRequest
 import com.ampnet.userservice.proto.UserResponse
 import com.ampnet.userservice.proto.UserServiceGrpc
+import io.grpc.StatusRuntimeException
 import mu.KLogging
 import net.devh.boot.grpc.client.channelfactory.GrpcChannelFactory
 import org.springframework.stereotype.Service
@@ -22,9 +25,13 @@ class UserServiceImpl(
 
     override fun getUsers(uuids: Iterable<UUID>): List<UserResponse> {
         logger.debug { "Fetching users: $uuids" }
-        val request = GetUsersRequest.newBuilder()
+        try {
+            val request = GetUsersRequest.newBuilder()
                 .addAllUuids(uuids.map { it.toString() })
                 .build()
-        return serviceBlockingStub.getUsers(request).usersList
+            return serviceBlockingStub.getUsers(request).usersList
+        } catch (ex: StatusRuntimeException) {
+            throw GrpcException(ErrorCode.INT_GRPC_USER, "Failed to fetch users. ${ex.localizedMessage}")
+        }
     }
 }

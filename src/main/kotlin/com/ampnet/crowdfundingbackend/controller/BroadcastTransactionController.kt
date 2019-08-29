@@ -3,7 +3,6 @@ package com.ampnet.crowdfundingbackend.controller
 import com.ampnet.crowdfundingbackend.controller.pojo.response.TxHashResponse
 import com.ampnet.crowdfundingbackend.enums.TransactionType
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
-import com.ampnet.crowdfundingbackend.exception.InternalException
 import com.ampnet.crowdfundingbackend.exception.InvalidRequestException
 import com.ampnet.crowdfundingbackend.exception.ResourceNotFoundException
 import com.ampnet.crowdfundingbackend.persistence.model.TransactionInfo
@@ -69,54 +68,54 @@ class BroadcastTransactionController(
             ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing wallet id")
         val wallet = cooperativeWalletService.activateWallet(walletId, signedTransaction)
         return wallet.hash
-            ?: throw InternalException(ErrorCode.TX_MISSING, "Wallet: $wallet is missing hash")
+            ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Wallet: $wallet is missing hash")
     }
 
     private fun createOrganizationWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val orgId = transactionInfo.companionId
-                ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing organization id")
+            ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing organization id")
         val organization = organizationService.findOrganizationById(orgId)
-                ?: throw ResourceNotFoundException(ErrorCode.ORG_MISSING, "Missing organization with id: $orgId")
+            ?: throw ResourceNotFoundException(ErrorCode.ORG_MISSING, "Missing organization with id: $orgId")
         val wallet = walletService.createOrganizationWallet(organization, signedTransaction)
         return wallet.activationData
     }
 
     private fun createProjectWallet(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val projectId = transactionInfo.companionId
-                ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing project id")
+            ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing project id")
         val project = projectService.getProjectById(projectId)
-                ?: throw ResourceNotFoundException(ErrorCode.PRJ_MISSING, "Missing project with id: $projectId")
+            ?: throw ResourceNotFoundException(ErrorCode.PRJ_MISSING, "Missing project with id: $projectId")
         val wallet = walletService.createProjectWallet(project, signedTransaction)
         return wallet.activationData
     }
 
     private fun confirmMintTransaction(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val depositId = transactionInfo.companionId
-                ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing deposit id")
+            ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing deposit id")
         val deposit = depositService.confirmMintTransaction(signedTransaction, depositId)
         return deposit.txHash
-                ?: throw InternalException(ErrorCode.TX_MISSING, "Missing txHash for mint transaction")
+            ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Missing txHash for mint transaction")
     }
 
     private fun confirmApprovalTransaction(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val withdrawId = getWithdrawIdFromTransactionInfo(transactionInfo)
         val withdraw = withdrawService.confirmApproval(signedTransaction, withdrawId)
         return withdraw.approvedTxHash
-                ?: throw InternalException(ErrorCode.TX_MISSING, "Missing approvedTxHash for withdraw transaction")
+            ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Missing approvedTxHash for withdraw transaction")
     }
 
     private fun burnTransaction(transactionInfo: TransactionInfo, signedTransaction: String): String {
         val withdrawId = getWithdrawIdFromTransactionInfo(transactionInfo)
         val withdraw = withdrawService.burn(signedTransaction, withdrawId)
         return withdraw.burnedTxHash
-                ?: throw InternalException(ErrorCode.TX_MISSING, "Missing burnedTxHash for withdraw transaction")
+            ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Missing burnedTxHash for withdraw transaction")
     }
 
     private fun getWithdrawIdFromTransactionInfo(transactionInfo: TransactionInfo): Int {
         return transactionInfo.companionId
-                ?: throw InvalidRequestException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing withdraw id")
+            ?: throw ResourceNotFoundException(ErrorCode.TX_COMPANION_ID_MISSING, "Missing withdraw id")
     }
 
     private fun getTransactionInfo(txId: Int) = transactionInfoService.findTransactionInfo(txId)
-            ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Non existing transaction with id: $txId")
+        ?: throw ResourceNotFoundException(ErrorCode.TX_MISSING, "Non existing transaction with id: $txId")
 }

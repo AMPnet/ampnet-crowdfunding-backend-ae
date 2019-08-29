@@ -16,11 +16,11 @@ import com.ampnet.crowdfunding.proto.TransactionsRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.BlockchainTransaction
 import com.ampnet.crowdfundingbackend.blockchain.pojo.ProjectInvestmentTxRequest
 import com.ampnet.crowdfundingbackend.exception.ErrorCode
-import com.ampnet.crowdfundingbackend.exception.InternalException
 import com.ampnet.crowdfundingbackend.blockchain.pojo.GenerateProjectWalletRequest
 import com.ampnet.crowdfundingbackend.blockchain.pojo.Portfolio
 import com.ampnet.crowdfundingbackend.blockchain.pojo.PortfolioData
 import com.ampnet.crowdfundingbackend.blockchain.pojo.TransactionData
+import com.ampnet.crowdfundingbackend.exception.GrpcException
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import mu.KLogging
@@ -49,7 +49,7 @@ class BlockchainServiceImpl(
             )
             logger.info { "Received response: $response" }
             return response.balance.toLongOrNull()
-                ?: throw InternalException(ErrorCode.INT_GRPC, "Cannot get balance as number")
+                ?: throw GrpcException(ErrorCode.INT_GRPC_BLOCKCHAIN, "Cannot get balance as number")
         } catch (ex: StatusRuntimeException) {
             throw getInternalExceptionFromStatusException(ex, "Could not get balance for wallet: $hash")
         }
@@ -233,12 +233,12 @@ class BlockchainServiceImpl(
     private fun getInternalExceptionFromStatusException(
         ex: StatusRuntimeException,
         message: String
-    ): InternalException {
+    ): GrpcException {
         val grpcErrorCode = getErrorDescriptionFromExceptionStatus(ex.status)
-        val errorCode = ErrorCode.INT_GRPC
+        val errorCode = ErrorCode.INT_GRPC_BLOCKCHAIN
         errorCode.specificCode = grpcErrorCode.code
         errorCode.message = grpcErrorCode.message
-        return InternalException(errorCode, message)
+        return GrpcException(errorCode, message)
     }
 
     // Status defined in ampenet-blockchain service, for more info see:

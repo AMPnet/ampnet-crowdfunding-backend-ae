@@ -46,7 +46,8 @@ enum class ErrorCode(val categoryCode: String, var specificCode: String, var mes
     // Internal: 08
     INT_FILE_STORAGE("08", "01", "Could not upload document on cloud file storage"),
     INT_INVALID_VALUE("08", "02", "Invalid value in request"),
-    INT_GRPC("08", "50", "Failed gRPC call"),
+    INT_GRPC_BLOCKCHAIN("08", "50", "Failed gRPC call to blockchain service"),
+    INT_GRPC_USER("08", "50", "Failed gRPC call to user service"),
 
     // Transaction: 09
     TX_MISSING("09", "01", "Non existing transaction"),

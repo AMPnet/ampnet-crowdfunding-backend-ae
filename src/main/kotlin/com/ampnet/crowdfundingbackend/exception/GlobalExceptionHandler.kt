@@ -39,10 +39,17 @@ class GlobalExceptionHandler {
         return generateErrorResponse(exception.errorCode, exception.message)
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
     @ExceptionHandler(InternalException::class)
     fun handleInternalException(exception: InternalException): ErrorResponse {
         logger.error("InternalException", exception)
+        return generateErrorResponse(exception.errorCode, exception.message)
+    }
+
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    @ExceptionHandler(GrpcException::class)
+    fun handleGrpcException(exception: GrpcException): ErrorResponse {
+        logger.error("GrpcException", exception)
         return generateErrorResponse(exception.errorCode, exception.message)
     }
 
