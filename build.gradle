@@ -80,6 +80,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-websocket')
     kapt "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
+    compile("org.springframework.cloud:spring-cloud-starter-kubernetes-config:1.0.3.RELEASE")
 
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
@@ -130,7 +131,7 @@ jib {
         tags = ["latest"]
     }
     container {
-        useCurrentTimestamp = "USE_CURRENT_TIMESTAMP"
+        creationTime = "USE_CURRENT_TIMESTAMP"
         environment = ["AWS_ACCESS_KEY_ID": "${System.env.AWS_ACCESS_KEY_ID}".toString(),
                        "AWS_SECRET_ACCESS_KEY": "${System.env.AWS_SECRET_ACCESS_KEY}".toString()]
     }
