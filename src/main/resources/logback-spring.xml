@@ -23,17 +23,11 @@
     </appender>
 
     <springProfile name="dev">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
-        </appender>
-
-        <!-- TODO: Remove file appender after switching to Kubernetes -->
         <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${LOG_DIR}/${LOG_FILE_PREFIX}.log</file>
             <encoder>
                 <pattern>${PATTERN_COLOR}</pattern>
             </encoder>
-
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                 <fileNamePattern>${LOG_DIR}/${LOG_FILE_PREFIX}.%d{yyyy-MM-dd}.log</fileNamePattern>
                 <maxHistory>${MAX_HISTORY}</maxHistory>
@@ -49,12 +43,17 @@
             <encoder>
                 <pattern>${PATTERN_COLOR}</pattern>
             </encoder>
-
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                 <fileNamePattern>${LOG_DIR}/${LOG_ERROR_FILE_PREFIX}.%d{yyyy-MM-dd}.log</fileNamePattern>
                 <maxHistory>${MAX_HISTORY}</maxHistory>
                 <totalSizeCap>1GB</totalSizeCap>
             </rollingPolicy>
+        </appender>
+    </springProfile>
+
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
         </appender>
     </springProfile>
 
